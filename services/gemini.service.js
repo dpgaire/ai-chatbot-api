@@ -1,0 +1,43 @@
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+class GeminiManager {
+  constructor() {
+    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    this.embeddingModel = this.genAI.getGenerativeModel({ model: 'text-embedding-004' });
+    this.chatModel = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  }
+
+  async generateEmbedding(text) {
+    try {
+      const result = await this.embeddingModel.embedContent(text);
+      return result.embedding.values;
+    } catch (error) {
+      console.error('Error generating embedding:', error);
+      throw new Error('Failed to generate embedding');
+    }
+  }
+
+  async generateResponse(query, context = []) {
+    try {
+      let prompt = `You are a helpful personal AI assistant. Answer the user's question based on the provided context from their personal data.\n\nUser Question: ${query}`;
+
+      if (context.length > 0) {
+        prompt += `\n\nRelevant Context from Personal Data:\n`;
+        context.forEach((item, index) => {
+          prompt += `${index + 1}. ${item.text} (Relevance: ${(item.score * 100).toFixed(1)}%)\n`;
+        });
+        prompt += `\nPlease provide a helpful response based on the context above. If the context doesn't contain relevant information, let the user know and provide a general helpful response.`;
+      } else {
+        prompt += `\n\nNo relevant context found in personal data. Please provide a general helpful response.`;
+      }
+
+      const result = await this.chatModel.generateContent(prompt);
+      return result.response.text();
+    } catch (error) {
+      console.error('Error generating response:', error);
+      throw new Error('Failed to generate response');
+    }
+  }
+}
+
+module.exports = GeminiManager;

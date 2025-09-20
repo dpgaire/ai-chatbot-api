@@ -1,0 +1,30 @@
+{
+  "name": "ai-chatbot-qdrant",
+  "version": "1.0.0",
+  "description": "Personal AI chatbot with Qdrant vector database integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "ai",
+    "chatbot",
+    "qdrant",
+    "vector-database",
+    "gemini",
+    "vercel"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@qdrant/js-client-rest": "^1.15.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "uuid": "^13.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
