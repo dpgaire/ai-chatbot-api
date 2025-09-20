@@ -13,6 +13,8 @@ const train = async (req, res) => {
 
     // Validate request body
     const { text } = req.body;
+
+    console.log('req.body:', req.body)
     
     if (!text) {
       return res.status(400).json({ 
@@ -36,6 +38,7 @@ const train = async (req, res) => {
 
     // Store in Qdrant
     const id = generateUniqueId();
+    console.log('id',id)
     console.log(`Storing embedding with ID: ${id}`);
     const result = await qdrantManager.storeEmbedding(id, text, embedding);
 
