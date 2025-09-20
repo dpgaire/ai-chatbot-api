@@ -11,12 +11,6 @@
       "src": "/(.*)",
       "dest": "server.js"
     }
-  ],
-  "env": {
-    "GEMINI_API_KEY": "@gemini-api-key",
-    "QDRANT_URL": "@qdrant-url",
-    "QDRANT_API_KEY": "@qdrant-api-key",
-    "COLLECTION_NAME": "@collection-name"
-  }
+  ]
 }
 
