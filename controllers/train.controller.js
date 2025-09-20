@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
+const generateUniqueId = require('../utils/generateId');
 const GeminiManager = require('../services/gemini.service');
 const QdrantManager = require('../services/qdrant.service');
 
@@ -35,7 +35,7 @@ const train = async (req, res) => {
     const embedding = await geminiManager.generateEmbedding(text);
 
     // Store in Qdrant
-    const id = uuidv4();
+    const id = generateUniqueId();
     console.log(`Storing embedding with ID: ${id}`);
     const result = await qdrantManager.storeEmbedding(id, text, embedding);
 
