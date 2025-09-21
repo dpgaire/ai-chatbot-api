@@ -28,7 +28,18 @@ app.use('/api', aboutRoutes);
 app.use('/api', contactRoutes);
 app.use('/api/auth', authRoutes);
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+const swaggerUiOptions = {
+  swaggerOptions: {
+    persistAuthorization: true,
+  },
+  customCssUrl: 'https://unpkg.com/swagger-ui-dist@5.17.0/swagger-ui.css',
+  customJs: [
+    'https://unpkg.com/swagger-ui-dist@5.17.0/swagger-ui-bundle.js',
+    'https://unpkg.com/swagger-ui-dist@5.17.0/swagger-ui-standalone-preset.js'
+  ]
+};
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 app.use("/", (req, res) => {
   res.send(`
