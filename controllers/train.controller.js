@@ -13,8 +13,6 @@ const train = async (req, res) => {
 
     // Validate request body
     const { text } = req.body;
-
-    console.log('req.body:', req.body)
     
     if (!text) {
       return res.status(400).json({ 

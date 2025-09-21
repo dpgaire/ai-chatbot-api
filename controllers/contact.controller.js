@@ -9,6 +9,17 @@ const addContact = async (req, res) => {
   }
 };
 
+
+const getContact = async (req, res) => {
+  try {
+    const contact = await contactService.getContact();
+    res.status(200).json(contact);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   addContact,
+  getContact
 };
