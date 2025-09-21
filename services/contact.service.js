@@ -1,6 +1,6 @@
-const { QdrantClient } = require('@qdrant/js-client-rest');
-const GeminiManager = require('./gemini.service');
-const generateId = require('../utils/generateId');
+const { QdrantClient } = require("@qdrant/js-client-rest");
+const GeminiManager = require("./gemini.service");
+const generateId = require("../utils/generateId");
 
 class ContactService {
   constructor() {
@@ -8,7 +8,7 @@ class ContactService {
       url: process.env.QDRANT_URL,
       apiKey: process.env.QDRANT_API_KEY,
     });
-    this.collectionName = process.env.CONTACT_COLLECTION_NAME || 'contact';
+    this.collectionName = process.env.CONTACT_COLLECTION_NAME || "contact";
     this.geminiManager = new GeminiManager();
   }
 
@@ -22,7 +22,7 @@ class ContactService {
         await this.client.createCollection(this.collectionName, {
           vectors: {
             size: 768, // Gemini embedding size
-            distance: 'Cosine',
+            distance: "Cosine",
           },
         });
         console.log(`Collection '${this.collectionName}' created successfully`);
@@ -35,7 +35,9 @@ class ContactService {
   async addContact(contactData) {
     await this.ensureCollection();
 
-    const embedding = await this.geminiManager.generateEmbedding(contactData.message);
+    const embedding = await this.geminiManager.generateEmbedding(
+      contactData.message
+    );
     const id = generateId();
 
     const point = {
@@ -50,6 +52,16 @@ class ContactService {
     });
 
     return { success: true, id };
+  }
+  async getContact() {
+    await this.ensureCollection();
+
+    const response = await this.client.scroll(this.collectionName, {
+      limit: 100, // Adjust the limit as needed
+      with_payload: true,
+    });
+
+    return response.points.map((point) => point.payload);
   }
 }
 
