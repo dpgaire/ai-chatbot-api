@@ -4,6 +4,11 @@ const cors = require('cors');
 
 const chatRoutes = require('./routes/chat.routes');
 const trainRoutes = require('./routes/train.routes');
+const projectRoutes = require('./routes/project.routes');
+const blogRoutes = require('./routes/blog.routes');
+const skillRoutes = require('./routes/skill.routes');
+const aboutRoutes = require('./routes/about.routes');
+const contactRoutes = require('./routes/contact.routes');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -13,6 +18,11 @@ app.use(express.json());
 
 app.use('/api/chat', chatRoutes);
 app.use('/api/train', trainRoutes);
+app.use('/api', projectRoutes);
+app.use('/api', blogRoutes);
+app.use('/api', skillRoutes);
+app.use('/api', aboutRoutes);
+app.use('/api', contactRoutes);
 
 app.use("/", (req, res) => {
   res.send(`
