@@ -11,7 +11,12 @@ const options = {
     servers: [
       {
         url: 'http://localhost:3000',
+        description: 'Local server',
       },
+      {
+        url: 'https://ai-chatbot-api-ten.vercel.app',
+        description: 'Production server',
+      }
     ],
     components: {
       securitySchemes: {
