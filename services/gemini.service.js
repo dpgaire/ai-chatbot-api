@@ -19,7 +19,14 @@ class GeminiManager {
 
   async generateResponse(query, context = []) {
     try {
-      let prompt = `You are a helpful personal AI assistant. Answer the user's question based on the provided context from their personal data.\n\nUser Question: ${query}`;
+          let prompt = `You are a helpful personal AI assistant. 
+Answer the user's question directly and naturally, without prefacing with phrases like 
+"Based on your provided data" or "Thank you for asking". 
+Do not add unnecessary disclaimers. 
+If relevant context is provided, weave it naturally into the answer. 
+If no context is relevant, give a general helpful response. 
+
+User Question: ${query}`;
 
       if (context.length > 0) {
         prompt += `\n\nRelevant Context from Personal Data:\n`;
