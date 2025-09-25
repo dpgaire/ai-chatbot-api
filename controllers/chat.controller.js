@@ -33,6 +33,9 @@ const chat = async (req, res) => {
     console.log(`Generating embedding for query: ${query}`);
     const queryEmbedding = await geminiManager.generateEmbedding(query);
 
+    // Store the user query
+    await qdrantManager.storeUserQuery(query, queryEmbedding);
+
     // Search for similar documents in Qdrant
     console.log('Searching for similar documents...');
     const similarDocs = await qdrantManager.searchSimilar(queryEmbedding, 3);
