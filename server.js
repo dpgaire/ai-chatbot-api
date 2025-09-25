@@ -10,6 +10,7 @@ const skillRoutes = require('./routes/skill.routes');
 const aboutRoutes = require('./routes/about.routes');
 const contactRoutes = require('./routes/contact.routes');
 const authRoutes = require('./routes/auth.routes');
+const queryRoutes = require('./routes/query.routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
@@ -27,6 +28,7 @@ app.use('/api', skillRoutes);
 app.use('/api', aboutRoutes);
 app.use('/api', contactRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api', queryRoutes);
 
 const swaggerUiOptions = {
   swaggerOptions: {
