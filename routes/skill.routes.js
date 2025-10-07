@@ -76,7 +76,69 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/skills', protectRoute, skillController.addSkill);
-router.get('/skills', skillController.getSkills);
+
+/**
+ * @swagger
+ * /api/skills/{id}:
+ *   put:
+ *     summary: Update a skill
+ *     tags: [Skills]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               icon:
+ *                 type: string
+ *               skills:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     level:
+ *                       type: integer
+ *                     color:
+ *                       type: string
+ *     responses:
+ *       200:
+ *         description: Skill updated successfully
+ *       500:
+ *         description: Server error
+ *   delete:
+ *     summary: Delete a skill
+ *     tags: [Skills]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Skill deleted successfully
+ *       500:
+ *         description: Server error
+ */
+router.post('/', protectRoute, skillController.addSkill);
+router.get('/', skillController.getSkills);
+router.put('/:id', protectRoute, skillController.updateSkill);
+router.delete('/:id', protectRoute, skillController.deleteSkill);
 
 module.exports = router;
+

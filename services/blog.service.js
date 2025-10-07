@@ -1,6 +1,7 @@
 const { QdrantClient } = require('@qdrant/js-client-rest');
 const GeminiManager = require('./gemini.service');
-const generateId = require('../utils/generateId');
+const { generateId, normalizeId } = require("../utils/generateId");
+
 
 class BlogService {
   constructor() {
@@ -60,7 +61,61 @@ class BlogService {
       with_payload: true,
     });
 
-    return response.points.map(point => point.payload);
+    return response.points.map(point => ({ id: point.id, ...point.payload }));
+  }
+
+  async updateBlog(id, blogData) {
+    await this.ensureCollection();
+    console.log('Updating Blog - ID:', id);
+    console.log('Updating Blog - Data:', blogData);
+
+     const pointId = normalizeId(id);
+
+
+    try {
+      const embedding = await this.geminiManager.generateEmbedding(blogData.content);
+
+      const point = {
+        id: pointId,
+        vector: embedding,
+        payload: blogData,
+      };
+
+      await this.client.upsert(this.collectionName, {
+        wait: true,
+        points: [point],
+      });
+
+      return { success: true, id: pointId };
+    } catch (error) {
+      console.error('Error updating point in Qdrant:', error); // Log the full error object
+      throw error;
+    }
+  }
+
+  async deleteBlog(id) {
+    await this.ensureCollection();
+    try {
+        const pointId = normalizeId(id);
+      const retrieveResponse = await this.client.retrieve(this.collectionName, {
+        ids: [pointId],
+        with_payload: false,
+      });
+      console.log('Qdrant Retrieve Response for delete:', retrieveResponse);
+
+      if (retrieveResponse.length === 0) {
+        throw new Error(`Point with id ${pointId} not found.`);
+      }
+
+      await this.client.delete(this.collectionName, {
+        points: [pointId],
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting point from Qdrant:', error); // Log the full error object
+      throw error;
+    }
   }
 }
 

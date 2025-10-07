@@ -18,7 +18,27 @@ const getBlogs = async (req, res) => {
   }
 };
 
+const updateBlog = async (req, res) => {
+  try {
+    const blog = await blogService.updateBlog(req.params.id, req.body);
+    res.status(200).json(blog);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteBlog = async (req, res) => {
+  try {
+    await blogService.deleteBlog(req.params.id);
+    res.status(200).json({ message: 'Blog deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   addBlog,
   getBlogs,
+  updateBlog,
+  deleteBlog,
 };

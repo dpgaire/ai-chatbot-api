@@ -1,6 +1,6 @@
 const { QdrantClient } = require("@qdrant/js-client-rest");
 const GeminiManager = require("./gemini.service");
-const generateId = require("../utils/generateId");
+const { generateId } = require("../utils/generateId");
 
 class ContactService {
   constructor() {

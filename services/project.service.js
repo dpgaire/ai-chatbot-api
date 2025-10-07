@@ -1,6 +1,7 @@
 const { QdrantClient } = require('@qdrant/js-client-rest');
 const GeminiManager = require('./gemini.service');
-const generateId = require('../utils/generateId');
+const { generateId, normalizeId } = require("../utils/generateId");
+
 
 class ProjectService {
   constructor() {
@@ -60,7 +61,60 @@ class ProjectService {
       with_payload: true,
     });
 
-    return response.points.map(point => point.payload);
+    return response.points.map(point => ({ id: point.id, ...point.payload }));
+  }
+
+  async updateProject(id, projectData) {
+    await this.ensureCollection();
+    console.log('Updating Project - ID:', id);
+    console.log('Updating Project - Data:', projectData);
+
+    const pointId = normalizeId(id);
+
+
+    try {
+      const embedding = await this.geminiManager.generateEmbedding(projectData.longDescription);
+
+      const point = {
+        id: pointId,
+        vector: embedding,
+        payload: projectData,
+      };
+
+      await this.client.upsert(this.collectionName, {
+        wait: true,
+        points: [point],
+      });
+
+      return { success: true, id: pointId };
+    } catch (error) {
+      console.error('Error updating point in Qdrant:', error); // Log the full error object
+      throw error;
+    }
+  }
+
+  async deleteProject(id) {
+    await this.ensureCollection();
+    try {
+      const retrieveResponse = await this.client.retrieve(this.collectionName, {
+        ids: [id],
+        with_payload: false,
+      });
+      console.log('Qdrant Retrieve Response for delete:', retrieveResponse);
+
+      if (retrieveResponse.length === 0) {
+        throw new Error(`Point with id ${id} not found.`);
+      }
+
+      await this.client.delete(this.collectionName, {
+        points: [id],
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting point from Qdrant:', error); // Log the full error object
+      throw error;
+    }
   }
 }
 

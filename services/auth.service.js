@@ -1,7 +1,6 @@
 const { QdrantClient } = require('@qdrant/js-client-rest');
 const bcrypt = require('bcryptjs');
-const generateId = require('../utils/generateId');
-
+const { generateId } = require("../utils/generateId");
 class AuthService {
   constructor() {
     console.log("Qdrant URL:", process.env.QDRANT_URL);

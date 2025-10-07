@@ -46,7 +46,7 @@ const protectRoute = require('../middleware/auth.middleware');
  *                 type: string
  *               tags:
  *                 type: array
- *                 items:
+ *                 items: 
  *                   type: string
  *               likes:
  *                 type: integer
@@ -104,7 +104,78 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/blogs', protectRoute, blogController.addBlog);
-router.get('/blogs', blogController.getBlogs);
+
+/**
+ * @swagger
+ * /api/blogs/{id}:
+ *   put:
+ *     summary: Update a blog
+ *     tags: [Blogs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               excerpt:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               author:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               readTime:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               likes:
+ *                 type: integer
+ *               featured:
+ *                 type: boolean
+ *               image:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Blog updated successfully
+ *       500:
+ *         description: Server error
+ *   delete:
+ *     summary: Delete a blog
+ *     tags: [Blogs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Blog deleted successfully
+ *       500:
+ *         description: Server error
+ */
+router.post('/', protectRoute, blogController.addBlog);
+router.get('/', blogController.getBlogs);
+router.put('/:id', protectRoute, blogController.updateBlog);
+router.delete('/:id', protectRoute, blogController.deleteBlog);
 
 module.exports = router;
