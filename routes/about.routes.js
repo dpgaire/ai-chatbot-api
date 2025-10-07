@@ -54,7 +54,57 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/about', protectRoute, aboutController.addAbout);
-router.get('/about', aboutController.getAbout);
+
+/**
+ * @swagger
+ * /api/about/{id}:
+ *   put:
+ *     summary: Update about information
+ *     tags: [About]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: About information updated successfully
+ *       500:
+ *         description: Server error
+ *   delete:
+ *     summary: Delete about information
+ *     tags: [About]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: About information deleted successfully
+ *       500:
+ *         description: Server error
+ */
+router.post('/', protectRoute, aboutController.addAbout);
+router.get('/', aboutController.getAbout);
+router.put('/:id', protectRoute, aboutController.updateAbout);
+router.delete('/:id', protectRoute, aboutController.deleteAbout);
 
 module.exports = router;

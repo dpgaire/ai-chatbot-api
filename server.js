@@ -17,15 +17,18 @@ const swaggerSpec = require('./swagger');
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://admin-dashboard-coral-nu-61.vercel.app', 'http://localhost:5173']
+}));
+
 app.use(express.json());
 
 app.use('/api/chat', chatRoutes);
 app.use('/api/train', trainRoutes);
 app.use('/api', projectRoutes);
-app.use('/api', blogRoutes);
-app.use('/api', skillRoutes);
-app.use('/api', aboutRoutes);
+app.use('/api/blogs', blogRoutes);
+app.use('/api/skills', skillRoutes);
+app.use('/api/about', aboutRoutes);
 app.use('/api', contactRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', queryRoutes);
@@ -42,6 +45,11 @@ const swaggerUiOptions = {
 };
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+
+app.use((req, res, next) => {
+  console.log('Incoming:', req.method, req.originalUrl, 'from', req.headers.origin || 'no origin');
+  next();
+});
 
 app.use("/", (req, res) => {
   res.send(`
