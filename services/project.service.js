@@ -95,19 +95,23 @@ class ProjectService {
 
   async deleteProject(id) {
     await this.ensureCollection();
+
     try {
+    const pointId = normalizeId(id);
+
       const retrieveResponse = await this.client.retrieve(this.collectionName, {
-        ids: [id],
+        ids: [pointId],
         with_payload: false,
       });
       console.log('Qdrant Retrieve Response for delete:', retrieveResponse);
 
       if (retrieveResponse.length === 0) {
-        throw new Error(`Point with id ${id} not found.`);
+        throw new Error(`Point with id ${pointId} not found.`);
       }
 
       await this.client.delete(this.collectionName, {
-        points: [id],
+        wait: true,
+        points: [pointId],
       });
 
       return { success: true };
