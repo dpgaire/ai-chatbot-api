@@ -41,6 +41,6 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
-router.get('/queries',protectRoute, getQueries);
+router.get('/',protectRoute, getQueries);
 
 module.exports = router;

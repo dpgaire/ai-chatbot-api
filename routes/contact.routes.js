@@ -91,7 +91,7 @@ const protectRoute = require('../middleware/auth.middleware');
  *         description: Server error
  */
 
-router.post('/contact', contactController.addContact);
-router.get('/contact', protectRoute, contactController.getContact);
+router.post('/', contactController.addContact);
+router.get('/', protectRoute, contactController.getContact);
 
 module.exports = router;

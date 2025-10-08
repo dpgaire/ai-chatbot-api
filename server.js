@@ -25,13 +25,13 @@ app.use(express.json());
 
 app.use('/api/chat', chatRoutes);
 app.use('/api/train', trainRoutes);
-app.use('/api', projectRoutes);
+app.use('/api/projects', projectRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/about', aboutRoutes);
-app.use('/api', contactRoutes);
+app.use('/api/contact', contactRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api', queryRoutes);
+app.use('/api/queries', queryRoutes);
 
 const swaggerUiOptions = {
   swaggerOptions: {
