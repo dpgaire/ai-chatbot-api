@@ -82,4 +82,38 @@ router.post('/register', authController.register);
  */
 router.post('/login', authController.login);
 
+/**
+ * @swagger
+ * /api/auth/refresh-token:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Access token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *       401:
+ *         description: Refresh token is required
+ *       403:
+ *         description: Invalid refresh token
+ */
+router.post('/refresh-token', authController.refreshToken);
+
 module.exports = router;
