@@ -36,9 +36,19 @@ const deleteProject = async (req, res) => {
   }
 };
 
+const getProjectById = async (req, res) => {
+  try {
+    const project = await projectService.getProjectById(req.params.id);
+    res.status(200).json(project);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   addProject,
   getProjects,
   updateProject,
   deleteProject,
+  getProjectById,
 };

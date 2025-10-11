@@ -108,6 +108,20 @@ const protectRoute = require('../middleware/auth.middleware');
 /**
  * @swagger
  * /api/blogs/{id}:
+ *   get:
+ *     summary: Get a blog by ID
+ *     tags: [Blogs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A single blog
+ *       500:
+ *         description: Server error
  *   put:
  *     summary: Update a blog
  *     tags: [Blogs]
@@ -175,6 +189,7 @@ const protectRoute = require('../middleware/auth.middleware');
  */
 router.post('/', protectRoute, blogController.addBlog);
 router.get('/', blogController.getBlogs);
+router.get('/:id', blogController.getBlogById);
 router.put('/:id', protectRoute, blogController.updateBlog);
 router.delete('/:id', protectRoute, blogController.deleteBlog);
 
