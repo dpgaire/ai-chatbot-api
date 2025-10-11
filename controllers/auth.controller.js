@@ -40,7 +40,7 @@ const login = async (req, res) => {
       fullName: "Durga Gairhe",
       email: user.email,
       role: "admin",
-      image: "https://i.ibb.co/TBRCMdfK/durga-png.png",
+      image: "https://dpgaire.github.io/image-server/projects/durga.png",
       accessToken,
       refreshToken,
     });

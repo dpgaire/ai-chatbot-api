@@ -118,6 +118,20 @@ const protectRoute = require('../middleware/auth.middleware');
 /**
  * @swagger
  * /api/projects/{id}:
+ *   get:
+ *     summary: Get a project by ID
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A single project
+ *       500:
+ *         description: Server error
  *   put:
  *     summary: Update a project
  *     tags: [Projects]
@@ -192,6 +206,7 @@ const protectRoute = require('../middleware/auth.middleware');
  */
 router.post('/', protectRoute, projectController.addProject);
 router.get('/', projectController.getProjects);
+router.get('/:id', projectController.getProjectById);
 router.put('/:id', protectRoute, projectController.updateProject);
 router.delete('/:id', protectRoute, projectController.deleteProject);
 

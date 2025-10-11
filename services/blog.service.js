@@ -117,6 +117,19 @@ class BlogService {
       throw error;
     }
   }
+
+  async getBlogById(id) {
+    await this.ensureCollection();
+    const pointId = normalizeId(id);
+    const response = await this.client.retrieve(this.collectionName, {
+      ids: [pointId],
+      with_payload: true,
+    });
+    if (response.length === 0) {
+      throw new Error(`Blog with id ${pointId} not found.`);
+    }
+    return { id: response[0].id, ...response[0].payload };
+  }
 }
 
 module.exports = new BlogService();
