@@ -1,6 +1,8 @@
 const generateUniqueId = require('../utils/generateId');
 const GeminiManager = require('../services/gemini.service');
 const QdrantManager = require('../services/qdrant.service');
+const { generateId, normalizeId } = require("../utils/generateId");
+
 
 const train = async (req, res) => {
   try {
@@ -35,7 +37,7 @@ const train = async (req, res) => {
     const embedding = await geminiManager.generateEmbedding(content);
 
     // Store in Qdrant
-    const id = req.body.id || generateUniqueId();
+    const id = req.body.id || generateId();
     const payload = {
       category,
       title,
@@ -78,11 +80,13 @@ const getAllTrainData = async (req, res) => {
 const updateTrainData = async (req, res) => {
   try {
     const { id } = req.params;
+    const pointId = normalizeId(id);
+
     const { category, title, content, tags } = req.body;
     const qdrantManager = new QdrantManager();
     const geminiManager = new GeminiManager();
 
-    const existingPoint = await qdrantManager.getPoint(id);
+    const existingPoint = await qdrantManager.getPoint(pointId);
     if (!existingPoint) {
       return res.status(404).json({ error: 'Data point not found' });
     }
@@ -99,7 +103,7 @@ const updateTrainData = async (req, res) => {
       tags: tags || existingPoint.payload.tags,
     };
 
-    const result = await qdrantManager.storeEmbedding(id, payload, embedding);
+    const result = await qdrantManager.storeEmbedding(pointId, payload, embedding);
     return res.status(200).json({ success: true, message: 'Data successfully updated', id: result.id });
   } catch (error) {
     console.error('Update train data error:', error);
@@ -110,14 +114,15 @@ const updateTrainData = async (req, res) => {
 const deleteTrainData = async (req, res) => {
   try {
     const { id } = req.params;
+     const pointId = normalizeId(id);
     const qdrantManager = new QdrantManager();
 
-    const existingPoint = await qdrantManager.getPoint(id);
+    const existingPoint = await qdrantManager.getPoint(pointId);
     if (!existingPoint) {
       return res.status(404).json({ error: 'Data point not found' });
     }
 
-    await qdrantManager.deleteTrainData(id);
+    await qdrantManager.deleteTrainData(pointId);
     return res.status(200).json({ success: true, message: 'Data successfully deleted' });
   } catch (error) {
     console.error('Delete train data error:', error);
