@@ -31,7 +31,7 @@ User Question: ${query}`;
       if (context.length > 0) {
         prompt += `\n\nRelevant Context from Personal Data:\n`;
         context.forEach((item, index) => {
-          prompt += `${index + 1}. ${item.text} (Relevance: ${(item.score * 100).toFixed(1)}%)\n`;
+          prompt += `${index + 1}. ${item.payload.content} (Relevance: ${(item.score * 100).toFixed(1)}%)\n`;
         });
         prompt += `\nPlease provide a helpful response based on the context above. If the context doesn't contain relevant information, let the user know and provide a general helpful response.`;
       } else {

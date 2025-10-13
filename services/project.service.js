@@ -42,7 +42,7 @@ class ProjectService {
     const point = {
       id: id,
       vector: embedding,
-      payload: projectData,
+      payload: { ...projectData, views: [] },
     };
 
     await this.client.upsert(this.collectionName, {
@@ -132,6 +132,21 @@ class ProjectService {
       throw new Error(`Project with id ${pointId} not found.`);
     }
     return { id: response[0].id, ...response[0].payload };
+  }
+
+  async incrementViewCount(id) {
+    await this.ensureCollection();
+    const pointId = normalizeId(id);
+
+    const project = await this.getProjectById(pointId);
+    const views = project.views || [];
+    views.push({ timestamp: new Date() });
+
+    const updatedProject = { ...project, views };
+
+    await this.updateProject(pointId, updatedProject);
+
+    return { success: true, title: project.title, views };
   }
 }
 
