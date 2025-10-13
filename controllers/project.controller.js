@@ -45,10 +45,20 @@ const getProjectById = async (req, res) => {
   }
 };
 
+const incrementViewCount = async (req, res) => {
+  try {
+    const { title, views } = await projectService.incrementViewCount(req.params.id);
+    res.status(200).json({ title, views });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   addProject,
   getProjects,
   updateProject,
   deleteProject,
   getProjectById,
+  incrementViewCount,
 };

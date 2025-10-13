@@ -45,10 +45,20 @@ const getBlogById = async (req, res) => {
   }
 };
 
+const incrementViewCount = async (req, res) => {
+  try {
+    const { title, views, viewCount } = await blogService.incrementViewCount(req.params.id);
+    res.status(200).json({ title, views, viewCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   addBlog,
   getBlogs,
   updateBlog,
   deleteBlog,
   getBlogById,
+  incrementViewCount,
 };

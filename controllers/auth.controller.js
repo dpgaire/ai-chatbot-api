@@ -69,8 +69,16 @@ const refreshToken = (req, res) => {
   });
 };
 
+
+const logout = (req, res) => {
+  // For token-based auth, the client is responsible for destroying the token.
+  // The backend can simply confirm the logout.
+  res.json({ message: 'Logged out successfully' });
+};
+
 module.exports = {
   register,
   login,
   refreshToken,
+  logout,
 };

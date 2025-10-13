@@ -130,6 +130,12 @@ class AuthService {
       throw new Error("Login failed: " + (error.message || "Bad Request"));
     }
   }
+
+  async logout() {
+    // In a token-based system, the client handles logout by deleting the token.
+    // This function is here to confirm the action and for any future server-side needs.
+    return { message: 'Logout confirmed' };
+  }
 }
 
 module.exports = new AuthService();

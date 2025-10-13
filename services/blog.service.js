@@ -42,7 +42,7 @@ class BlogService {
     const point = {
       id: id,
       vector: embedding,
-      payload: blogData,
+      payload: { ...blogData, views: [] },
     };
 
     await this.client.upsert(this.collectionName, {
@@ -129,6 +129,21 @@ class BlogService {
       throw new Error(`Blog with id ${pointId} not found.`);
     }
     return { id: response[0].id, ...response[0].payload };
+  }
+
+  async incrementViewCount(id) {
+    await this.ensureCollection();
+    const pointId = normalizeId(id);
+
+    const blog = await this.getBlogById(pointId);
+    const views = blog.views || [];
+    views.push({ timestamp: new Date() });
+
+    const updatedBlog = { ...blog, views };
+
+    await this.updateBlog(pointId, updatedBlog);
+
+    return { success: true, title: blog.title, views, viewCount: views.length };
   }
 }
 

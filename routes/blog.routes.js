@@ -187,10 +187,30 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
+
+/**
+ * @swagger
+ * /api/blogs/{id}/view:
+ *   put:
+ *     summary: Increment view count for a blog
+ *     tags: [Blogs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: View count incremented successfully
+ *       500:
+ *         description: Server error
+ */
 router.post('/', protectRoute, blogController.addBlog);
 router.get('/', blogController.getBlogs);
 router.get('/:id', blogController.getBlogById);
 router.put('/:id', protectRoute, blogController.updateBlog);
 router.delete('/:id', protectRoute, blogController.deleteBlog);
+router.put('/:id/view', blogController.incrementViewCount);
 
 module.exports = router;

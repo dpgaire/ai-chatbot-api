@@ -204,10 +204,30 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
+
+/**
+ * @swagger
+ * /api/projects/{id}/view:
+ *   put:
+ *     summary: Increment view count for a project
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: View count incremented successfully
+ *       500:
+ *         description: Server error
+ */
 router.post('/', protectRoute, projectController.addProject);
 router.get('/', projectController.getProjects);
 router.get('/:id', projectController.getProjectById);
 router.put('/:id', protectRoute, projectController.updateProject);
 router.delete('/:id', protectRoute, projectController.deleteProject);
+router.put('/:id/view', projectController.incrementViewCount);
 
 module.exports = router;

@@ -12,17 +12,17 @@ const train = async (req, res) => {
     }
 
     // Validate request body
-    const { text } = req.body;
+    const { category, title, content, tags } = req.body;
     
-    if (!text) {
+    if (!content) {
       return res.status(400).json({ 
-        error: 'Missing required fields: text' 
+        error: 'Missing required fields: content' 
       });
     }
 
-    if (typeof text !== 'string' || text.trim().length === 0) {
+    if (typeof content !== 'string' || content.trim().length === 0) {
       return res.status(400).json({ 
-        error: 'Text must be a non-empty string' 
+        error: 'Content must be a non-empty string' 
       });
     }
 
@@ -31,20 +31,26 @@ const train = async (req, res) => {
     const geminiManager = new GeminiManager();
 
     // Generate embedding
-    console.log(`Generating embedding for text: ${text.substring(0, 100)}...`);
-    const embedding = await geminiManager.generateEmbedding(text);
+    console.log(`Generating embedding for content: ${content.substring(0, 100)}...`);
+    const embedding = await geminiManager.generateEmbedding(content);
 
     // Store in Qdrant
-    const id = generateUniqueId();
+    const id = req.body.id || generateUniqueId();
+    const payload = {
+      category,
+      title,
+      content,
+      tags,
+    };
     console.log('id',id)
     console.log(`Storing embedding with ID: ${id}`);
-    const result = await qdrantManager.storeEmbedding(id, text, embedding);
+    const result = await qdrantManager.storeEmbedding(id, payload, embedding);
 
     return res.status(200).json({
       success: true,
-      message: 'Text successfully trained and stored',
+      message: 'Data successfully trained and stored',
       id: result.id,
-      textLength: text.length,
+      contentLength: content.length,
       embeddingSize: embedding.length
     });
 
@@ -58,6 +64,70 @@ const train = async (req, res) => {
   }
 };
 
+const getAllTrainData = async (req, res) => {
+  try {
+    const qdrantManager = new QdrantManager();
+    const data = await qdrantManager.getAllTrainData();
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error('Get all train data error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const updateTrainData = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { category, title, content, tags } = req.body;
+    const qdrantManager = new QdrantManager();
+    const geminiManager = new GeminiManager();
+
+    const existingPoint = await qdrantManager.getPoint(id);
+    if (!existingPoint) {
+      return res.status(404).json({ error: 'Data point not found' });
+    }
+
+    let embedding = existingPoint.vector;
+    if (content && content !== existingPoint.payload.content) {
+      embedding = await geminiManager.generateEmbedding(content);
+    }
+
+    const payload = {
+      category: category || existingPoint.payload.category,
+      title: title || existingPoint.payload.title,
+      content: content || existingPoint.payload.content,
+      tags: tags || existingPoint.payload.tags,
+    };
+
+    const result = await qdrantManager.storeEmbedding(id, payload, embedding);
+    return res.status(200).json({ success: true, message: 'Data successfully updated', id: result.id });
+  } catch (error) {
+    console.error('Update train data error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const deleteTrainData = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const qdrantManager = new QdrantManager();
+
+    const existingPoint = await qdrantManager.getPoint(id);
+    if (!existingPoint) {
+      return res.status(404).json({ error: 'Data point not found' });
+    }
+
+    await qdrantManager.deleteTrainData(id);
+    return res.status(200).json({ success: true, message: 'Data successfully deleted' });
+  } catch (error) {
+    console.error('Delete train data error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   train,
+  getAllTrainData,
+  updateTrainData,
+  deleteTrainData,
 };

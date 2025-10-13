@@ -1,42 +1,42 @@
 const express = require('express');
 const router = express.Router();
 const statsController = require('../controllers/stats.controller');
-const protectRoute = require('../middleware/auth.middleware');
 
 /**
  * @swagger
  * tags:
  *   name: Stats
- *   description: Application statistics
+ *   description: Site statistics
  */
 
 /**
  * @swagger
- * /api/stats:
+ * /api/stats/main-page-views:
  *   get:
- *     summary: Get application statistics
+ *     summary: Get main page view count
  *     tags: [Stats]
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: A JSON object with application statistics
+ *         description: Main page view count
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 blogs:
- *                   type: integer
- *                 projects:
- *                   type: integer
- *                 skills:
- *                   type: integer
- *                 contacts:
+ *                 viewCount:
  *                   type: integer
  *       500:
  *         description: Server error
+ *   put:
+ *     summary: Increment main page view count
+ *     tags: [Stats]
+ *     responses:
+ *       200:
+ *         description: Main page view count incremented successfully
+ *       500:
+ *         description: Server error
  */
-router.get('/', protectRoute, statsController.getStats);
+router.get('/main-page-views', statsController.getMainPageViews);
+router.put('/main-page-views', statsController.incrementMainPageViews);
 
 module.exports = router;

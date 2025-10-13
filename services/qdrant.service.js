@@ -37,14 +37,14 @@ class QdrantManager {
     }
   }
 
-  async storeEmbedding(id, text, embedding) {
+  async storeEmbedding(id, payload, embedding) {
     await this.ensureCollection(this.collectionName);
 
     const point = {
       id: id,
       vector: embedding,
       payload: {
-        text: text,
+        ...payload,
         timestamp: new Date().toISOString(),
       },
     };
@@ -89,8 +89,7 @@ class QdrantManager {
     return searchResult.map((result) => ({
       id: result.id,
       score: result.score,
-      text: result.payload.text,
-      timestamp: result.payload.timestamp,
+      payload: result.payload,
     }));
   }
 
@@ -111,6 +110,39 @@ class QdrantManager {
       query: point.payload.query,
       timestamp: point.payload.timestamp,
     }));
+  }
+
+  async getAllTrainData() {
+    await this.ensureCollection(this.collectionName);
+
+    const scrollResult = await this.client.scroll(this.collectionName, {
+      with_payload: true,
+      with_vectors: false,
+      limit: 100, // Adjust limit as needed
+    });
+
+    return scrollResult.points.map((point) => ({ id: point.id, ...point.payload }));
+  }
+
+  async deleteTrainData(id) {
+    await this.ensureCollection(this.collectionName);
+
+    await this.client.delete(this.collectionName, {
+      points: [id],
+    });
+
+    return { success: true, id };
+  }
+
+  async getPoint(id) {
+    await this.ensureCollection(this.collectionName);
+
+    const result = await this.client.retrieve(this.collectionName, {
+      ids: [id],
+      with_payload: true,
+    });
+
+    return result[0];
   }
 }
 

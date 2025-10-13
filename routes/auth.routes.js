@@ -116,4 +116,19 @@ router.post('/login', authController.login);
  */
 router.post('/refresh-token', authController.refreshToken);
 
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout a user
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: User logged out successfully
+ *       500:
+ *         description: Server error
+ */
+router.post('/logout', authController.logout);
+
 module.exports = router;
