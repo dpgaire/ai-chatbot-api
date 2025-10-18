@@ -101,7 +101,7 @@ class QdrantManager {
       {
         with_payload: true,
         with_vectors: false,
-        limit: 100, // Adjust limit as needed
+        limit: 100, 
       }
     );
 
