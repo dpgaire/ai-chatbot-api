@@ -1,0 +1,71 @@
+const QdrantManager = require('./qdrant.service');
+const { generateId } = require('../utils/generateId');
+
+const qdrantManager = new QdrantManager();
+const CHAT_USERS_COLLECTION = 'chat_users';
+const CHAT_HISTORY_COLLECTION = 'chat_history';
+
+const saveUser = async ({ fullName, email }) => {
+  const userId = generateId();
+  const user = { id: userId, payload: { fullName, email } };
+  await qdrantManager.upsertPoint(CHAT_USERS_COLLECTION, [user]);
+  return user;
+};
+
+const saveChatHistory = async ({ userId, title, messages }) => {
+  const chatId = generateId();
+  const chatHistory = { id: chatId, payload: { userId, title, messages } };
+  await qdrantManager.upsertPoint(CHAT_HISTORY_COLLECTION, [chatHistory]);
+  return chatHistory;
+};
+
+const getUsers = async () => {
+  return await qdrantManager.scrollPoints(CHAT_USERS_COLLECTION);
+};
+
+const getChatHistories = async () => {
+  return await qdrantManager.scrollPoints(CHAT_HISTORY_COLLECTION);
+};
+
+const getChatHistoryByUserId = async (userId) => {
+  const allHistory = await qdrantManager.scrollPoints(CHAT_HISTORY_COLLECTION);
+  return allHistory.filter(chat => chat.userId === userId);
+};
+
+const getChatHistoryByUserIdAndChatId = async (userId, chatId) => {
+  const chatHistory = await qdrantManager.getPoint(CHAT_HISTORY_COLLECTION, chatId);
+  if (chatHistory && chatHistory.payload.userId === userId) {
+    return chatHistory;
+  }
+  return null;
+};
+
+const updateChatHistoryTitle = async (userId, chatId, title) => {
+  const chatHistory = await getChatHistoryByUserIdAndChatId(userId, chatId);
+  if (chatHistory) {
+    const newPayload = { ...chatHistory.payload, title: title };
+    await qdrantManager.updatePayload(CHAT_HISTORY_COLLECTION, chatId, newPayload);
+    return { id: chatId, payload: newPayload };
+  }
+  return null;
+};
+
+const deleteChatHistory = async (userId, chatId) => {
+  const chatHistory = await getChatHistoryByUserIdAndChatId(userId, chatId);
+  if (chatHistory) {
+    await qdrantManager.deletePoint(CHAT_HISTORY_COLLECTION, chatId);
+    return true;
+  }
+  return false;
+};
+
+module.exports = {
+  saveUser,
+  saveChatHistory,
+  getUsers,
+  getChatHistories,
+  getChatHistoryByUserId,
+  getChatHistoryByUserIdAndChatId,
+  updateChatHistoryTitle,
+  deleteChatHistory,
+};
