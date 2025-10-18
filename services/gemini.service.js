@@ -19,7 +19,7 @@ class GeminiManager {
 
   async generateResponse(query, context = []) {
     try {
-          let prompt = `You are a helpful personal AI assistant. 
+          let prompt = `You are a helpful personal AI assistant with access to the user's relationship in collection. 
 Answer the user's question directly and naturally, without prefacing with phrases like 
 "Based on your provided data" or "Thank you for asking". 
 Do not add unnecessary disclaimers. 

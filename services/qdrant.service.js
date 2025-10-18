@@ -13,7 +13,6 @@ class QdrantManager {
 
   async ensureCollection(collectionName, vectorSize = 768) {
     try {
-      // Check if collection exists
       const collectionExists = await this.client
         .getCollection(collectionName)
         .catch(() => null);
@@ -22,7 +21,6 @@ class QdrantManager {
         return;
       }
 
-      // Collection doesn't exist, create it
       console.log(`Creating collection '${collectionName}'`);
       await this.client.createCollection(collectionName, {
         vectors: {
@@ -35,6 +33,77 @@ class QdrantManager {
       console.error(`Error ensuring collection '${collectionName}':`, error);
       throw error;
     }
+  }
+
+  async ensureCollectionWithoutVector(collectionName) {
+    try {
+      const collectionExists = await this.client
+        .getCollection(collectionName)
+        .catch(() => null);
+      if (collectionExists) {
+        console.log(`Collection '${collectionName}' already exists`);
+        return;
+      }
+
+      console.log(`Creating collection '${collectionName}'`);
+      await this.client.createCollection(collectionName, {
+        vectors: {
+          size: 1,
+          distance: "Cosine",
+        },
+      });
+      console.log(`Collection '${collectionName}' created successfully`);
+    } catch (error) {
+      console.error(`Error ensuring collection '${collectionName}':`, error);
+      throw error;
+    }
+  }
+
+  async upsertPoint(collectionName, points) {
+    await this.ensureCollectionWithoutVector(collectionName);
+    const pointsWithVectors = points.map(point => ({
+      ...point,
+      vector: [0],
+    }));
+    await this.client.upsert(collectionName, {
+      wait: true,
+      points: pointsWithVectors,
+    });
+  }
+
+  async scrollPoints(collectionName, limit = 100) {
+    await this.ensureCollectionWithoutVector(collectionName);
+    const scrollResult = await this.client.scroll(collectionName, {
+      with_payload: true,
+      with_vectors: false,
+      limit: limit,
+    });
+    return scrollResult.points.map((point) => ({ id: point.id, ...point.payload }));
+  }
+
+  async getPoint(collectionName, pointId) {
+    await this.ensureCollectionWithoutVector(collectionName);
+    const result = await this.client.retrieve(collectionName, {
+      ids: [pointId],
+      with_payload: true,
+    });
+    return result[0];
+  }
+
+  async deletePoint(collectionName, pointId) {
+    await this.ensureCollectionWithoutVector(collectionName);
+    await this.client.delete(collectionName, {
+      points: [pointId],
+    });
+    return { success: true, id: pointId };
+  }
+
+  async updatePayload(collectionName, pointId, payload) {
+    await this.ensureCollectionWithoutVector(collectionName);
+    await this.client.setPayload(collectionName, {
+      payload: payload,
+      points: [pointId],
+    });
   }
 
   async storeEmbedding(id, payload, embedding) {
@@ -101,7 +170,7 @@ class QdrantManager {
       {
         with_payload: true,
         with_vectors: false,
-        limit: 100, // Adjust limit as needed
+        limit: 100, 
       }
     );
 
@@ -134,7 +203,7 @@ class QdrantManager {
     return { success: true, id };
   }
 
-  async getPoint(id) {
+  async getTrainDataPoint(id) {
     await this.ensureCollection(this.collectionName);
 
     const result = await this.client.retrieve(this.collectionName, {

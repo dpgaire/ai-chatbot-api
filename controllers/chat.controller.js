@@ -1,5 +1,6 @@
 const GeminiManager = require('../services/gemini.service');
 const QdrantManager = require('../services/qdrant.service');
+const chatService = require('../services/chat.service');
 
 const chat = async (req, res) => {
   try {
@@ -74,6 +75,123 @@ const chat = async (req, res) => {
   }
 };
 
+const saveUser = async (req, res) => {
+  try {
+    const { fullName, email } = req.body;
+    if (!fullName) {
+      return res.status(400).json({ error: 'Missing required fields: fullName and email' });
+    }
+    const user = await chatService.saveUser({ fullName, email });
+    res.status(201).json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error',error });
+  }
+};
+
+const saveChatHistory = async (req, res) => {
+  try {
+    const { userId, title, messages } = req.body;
+    if (!userId || !title || !messages) {
+      return res.status(400).json({ error: 'Missing required fields: userId, title, and messages' });
+    }
+    const chatHistory = await chatService.saveChatHistory({ userId, title, messages });
+    res.status(201).json({ success: true, chatHistory });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getUsers = async (req, res) => {
+  try {
+    const users = await chatService.getUsers();
+    res.status(200).json({ success: true, users });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getChatHistories = async (req, res) => {
+  try {
+    const chatHistories = await chatService.getChatHistories();
+    res.status(200).json({ success: true, chatHistories });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getChatHistory = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing required field: userId' });
+    }
+    const chatHistory = await chatService.getChatHistoryByUserId(parseInt(userId));
+    res.status(200).json({ success: true, chatHistory });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getChatHistoryById = async (req, res) => {
+  try {
+    const { userId, chatId } = req.params;
+    if (!userId || !chatId) {
+      return res.status(400).json({ error: 'Missing required fields: userId and chatId' });
+    }
+    const chatHistory = await chatService.getChatHistoryByUserIdAndChatId(parseInt(userId), parseInt(chatId));
+    if (chatHistory) {
+      res.status(200).json({ success: true, chatHistory });
+    } else {
+      res.status(404).json({ success: false, message: 'Chat history not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const updateChatHistory = async (req, res) => {
+  try {
+    const { userId, chatId } = req.params;
+    const { title } = req.body;
+    if (!userId || !chatId || !title) {
+      return res.status(400).json({ error: 'Missing required fields: userId, chatId, and title' });
+    }
+    const chatHistory = await chatService.updateChatHistoryTitle(parseInt(userId), parseInt(chatId), title);
+    if (chatHistory) {
+      res.status(200).json({ success: true, chatHistory });
+    } else {
+      res.status(404).json({ success: false, message: 'Chat history not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const deleteChatHistory = async (req, res) => {
+  try {
+    const { userId, chatId } = req.params;
+    if (!userId || !chatId) {
+      return res.status(400).json({ error: 'Missing required fields: userId and chatId' });
+    }
+    const success = await chatService.deleteChatHistory(parseInt(userId), parseInt(chatId));
+    if (success) {
+      res.status(200).json({ success: true, message: 'Chat history deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Chat history not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   chat,
+  saveUser,
+  saveChatHistory,
+  getUsers,
+  getChatHistories,
+  getChatHistory,
+  getChatHistoryById,
+  updateChatHistory,
+  deleteChatHistory,
 };
