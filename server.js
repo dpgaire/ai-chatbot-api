@@ -21,7 +21,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: ['https://admin-dashboard-coral-nu-61.vercel.app', 'https://www.durgagairhe.com.np','http://localhost:5173']
+  origin: ['https://admin-dashboard-coral-nu-61.vercel.app', 'https://www.durgagairhe.com.np','http://localhost:5173','https://ai-chatbot-api-ten.vercel.app']
 }));
 
 app.use(express.json());

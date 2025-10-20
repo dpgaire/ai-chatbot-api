@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const chatController = require('../controllers/chat.controller');
+const protectRoute = require('../middleware/auth.middleware');
+
 
 /**
  * @swagger
@@ -51,7 +53,7 @@ router.post('/', chatController.chat);
  *       500:
  *         description: Server error
  */
-router.get('/users', chatController.getUsers);
+router.get('/users',protectRoute, chatController.getUsers);
 
 /**
  * @swagger
