@@ -65,7 +65,18 @@ const refreshToken = (req, res) => {
       expiresIn: '1h',
     });
 
-    res.json({ accessToken });
+      const refreshToken = jwt.sign({ id: user.id }, process.env.JWT_REFRESH_SECRET, {
+      expiresIn: '7d',
+    });
+    
+    res.json({
+      fullName: "Durga Gairhe",
+      email: user.email,
+      role: "admin",
+      image: "https://dpgaire.github.io/image-server/projects/durga.png",
+      accessToken,
+      refreshToken,
+    });
   });
 };
 
