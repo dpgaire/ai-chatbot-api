@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const chatController = require('../controllers/chat.controller');
+const protectRoute = require('../middleware/auth.middleware');
+
 
 /**
  * @swagger
@@ -51,7 +53,7 @@ router.post('/', chatController.chat);
  *       500:
  *         description: Server error
  */
-router.get('/users', chatController.getUsers);
+router.get('/users',protectRoute, chatController.getUsers);
 
 /**
  * @swagger
@@ -188,7 +190,7 @@ router.get('/history/:userId/:chatId', chatController.getChatHistoryById);
  * @swagger
  * /api/chat/history/{userId}/{chatId}:
  *   patch:
- *     summary: Update a specific chat history title for a user
+ *     summary: Dynamically update a specific chat history for a user
  *     tags: [Chat]
  *     parameters:
  *       - in: path
@@ -207,9 +209,16 @@ router.get('/history/:userId/:chatId', chatController.getChatHistoryById);
  *         application/json:
  *           schema:
  *             type: object
- *             properties:
- *               title:
- *                 type: string
+ *             description: |-
+ *               An object containing the fields to be updated in the chat history.
+ *               Any valid field of the chat history payload can be provided for dynamic update.
+ *               For example, to update the title and add a new property:
+ *               ```json
+ *               {
+ *                 "title": "New Chat Title",
+ *                 "newProperty": "newValue"
+ *               }
+ *               ```
  *     responses:
  *       200:
  *         description: The updated chat history
@@ -218,7 +227,7 @@ router.get('/history/:userId/:chatId', chatController.getChatHistoryById);
  *       500:
  *         description: Server error
  */
-router.patch('/history/:userId/:chatId', chatController.updateChatHistory);
+router.patch('/history/:userId/:chatId', chatController.patchChatHistoryController);
 
 /**
  * @swagger

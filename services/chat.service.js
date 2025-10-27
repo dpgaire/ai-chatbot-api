@@ -50,6 +50,30 @@ const updateChatHistoryTitle = async (userId, chatId, title) => {
   return null;
 };
 
+const patchChatHistory = async (userId, chatId, patchData = {}) => {
+  const chatHistory = await getChatHistoryByUserIdAndChatId(userId, chatId);
+  if (!chatHistory) return null;
+
+  // Custom merge logic for messages
+  let mergedMessages = chatHistory.payload.messages || [];
+
+  if (patchData.messages) {
+    mergedMessages = [...mergedMessages, ...patchData.messages];
+  }
+
+  const newPayload = {
+    ...chatHistory.payload,
+    ...patchData,
+    messages: mergedMessages, // ensure merged array is kept
+    updatedAt: new Date().toISOString(),
+  };
+
+  await qdrantManager.updatePayload(CHAT_HISTORY_COLLECTION, chatId, newPayload);
+  return { id: chatId, payload: newPayload };
+};
+
+
+
 const deleteChatHistory = async (userId, chatId) => {
   const chatHistory = await getChatHistoryByUserIdAndChatId(userId, chatId);
   if (chatHistory) {
@@ -67,5 +91,6 @@ module.exports = {
   getChatHistoryByUserId,
   getChatHistoryByUserIdAndChatId,
   updateChatHistoryTitle,
+  patchChatHistory,
   deleteChatHistory,
 };
