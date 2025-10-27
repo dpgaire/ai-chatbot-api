@@ -184,6 +184,27 @@ const deleteChatHistory = async (req, res) => {
   }
 };
 
+const patchChatHistoryController = async (req, res) => {
+  try {
+    const { userId, chatId } = req.params;
+    const patchData = req.body;
+
+    if (!userId || !chatId) {
+      return res.status(400).json({ error: 'Missing required fields: userId and chatId' });
+    }
+
+    const chatHistory = await chatService.patchChatHistory(parseInt(userId), parseInt(chatId), patchData);
+
+    if (chatHistory) {
+      res.status(200).json({ success: true, chatHistory });
+    } else {
+      res.status(404).json({ success: false, message: 'Chat history not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   chat,
   saveUser,
@@ -193,5 +214,6 @@ module.exports = {
   getChatHistory,
   getChatHistoryById,
   updateChatHistory,
+  patchChatHistoryController,
   deleteChatHistory,
 };
