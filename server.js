@@ -14,6 +14,7 @@ const queryRoutes = require('./routes/query.routes');
 const statsRoutes = require('./routes/stats.routes');
 const noteRoutes = require('./routes/note.routes');
 const quickLinkRoutes = require('./routes/quicklink.routes');
+const codeLogRoutes = require('./routes/code-log.routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
@@ -38,6 +39,7 @@ app.use('/api/queries', queryRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/quicklinks', quickLinkRoutes);
+app.use('/api/code-log',codeLogRoutes)
 
 const swaggerUiOptions = {
   swaggerOptions: {
