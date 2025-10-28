@@ -57,6 +57,30 @@ router.get('/users',protectRoute, chatController.getUsers);
 
 /**
  * @swagger
+ * /api/chat/users/{id}:
+ *   delete:
+ *     summary: Delete a user by ID
+ *     tags: [Chat]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/users/:id', protectRoute, chatController.deleteUser);
+
+/**
+ * @swagger
  * /api/chat/histories:
  *   get:
  *     summary: Get all chat histories

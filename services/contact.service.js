@@ -1,6 +1,6 @@
 const { QdrantClient } = require("@qdrant/js-client-rest");
 const GeminiManager = require("./gemini.service");
-const { generateId } = require("../utils/generateId");
+const { generateId, normalizeId } = require("../utils/generateId");
 
 class ContactService {
   constructor() {
@@ -38,7 +38,7 @@ class ContactService {
     const embedding = await this.geminiManager.generateEmbedding(
       contactData.message
     );
-    const id = generateId();
+    const id = contactData.id || generateId();
 
     const point = {
       id: id,
@@ -60,8 +60,71 @@ class ContactService {
       limit: 100, // Adjust the limit as needed
       with_payload: true,
     });
+    return response.points.map((point) => ({ id: point.id, ...point.payload }));
+  }
 
-    return response.points.map((point) => point.payload);
+  async getContactById(id) {
+    await this.ensureCollection();
+    const pointId = normalizeId(id);
+    const response = await this.client.retrieve(this.collectionName, {
+      ids: [pointId],
+      with_payload: true,
+    });
+    if (response.length === 0) {
+      throw new Error(`Contact with id ${pointId} not found.`);
+    }
+    return { id: response[0].id, ...response[0].payload };
+  }
+
+  async updateContact(id, contactData) {
+    await this.ensureCollection();
+    const pointId = normalizeId(id);
+
+    try {
+      const embedding = await this.geminiManager.generateEmbedding(
+        contactData.message
+      );
+
+      const point = {
+        id: pointId,
+        vector: embedding,
+        payload: contactData,
+      };
+
+      await this.client.upsert(this.collectionName, {
+        wait: true,
+        points: [point],
+      });
+
+      return { success: true, id: pointId };
+    } catch (error) {
+      console.error("Error updating point in Qdrant:", error);
+      throw error;
+    }
+  }
+
+  async deleteContact(id) {
+    await this.ensureCollection();
+    try {
+      const pointId = normalizeId(id);
+      const retrieveResponse = await this.client.retrieve(this.collectionName, {
+        ids: [pointId],
+        with_payload: false,
+      });
+
+      if (retrieveResponse.length === 0) {
+        throw new Error(`Point with id ${pointId} not found.`);
+      }
+
+      await this.client.delete(this.collectionName, {
+        points: [pointId],
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error deleting point from Qdrant:", error);
+      throw error;
+    }
   }
 }
 
