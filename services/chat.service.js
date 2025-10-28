@@ -1,5 +1,5 @@
 const QdrantManager = require('./qdrant.service');
-const { generateId } = require('../utils/generateId');
+const { generateId, normalizeId } = require('../utils/generateId');
 
 const qdrantManager = new QdrantManager();
 const CHAT_USERS_COLLECTION = 'chat_users';
@@ -83,6 +83,32 @@ const deleteChatHistory = async (userId, chatId) => {
   return false;
 };
 
+const deleteUser = async (userId) => {
+   const pointId = normalizeId(userId);
+  try {
+    // Fetch user's chat history
+    const userChatHistories = await getChatHistoryByUserId(pointId);
+    
+    // Delete each chat from Qdrant
+    for (const chat of userChatHistories) {
+      try {
+        await qdrantManager.deletePoint(CHAT_HISTORY_COLLECTION, chat.id);
+      } catch (chatError) {
+        console.error(`Failed to delete chat with id ${chat.id}:`, chatError);
+      }
+    }
+
+    // Delete the user from Qdrant
+    await qdrantManager.deletePoint(CHAT_USERS_COLLECTION, pointId);
+
+    console.log(`User ${pointId} and their chats deleted successfully.`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to delete user ${pointId}:`, error);
+    return false;
+  }
+};
+
 module.exports = {
   saveUser,
   saveChatHistory,
@@ -93,4 +119,5 @@ module.exports = {
   updateChatHistoryTitle,
   patchChatHistory,
   deleteChatHistory,
+  deleteUser,
 };
