@@ -1,46 +1,52 @@
 const express = require('express');
 const router = express.Router();
-const { getQueries } = require('../controllers/query.controller');
+const queryController = require('../controllers/query.controller');
 const protectRoute = require('../middleware/auth.middleware');
-
 
 /**
  * @swagger
  * tags:
  *   name: Queries
- *   description: Retrieve user queries
+ *   description: Query management
  */
 
 /**
  * @swagger
  * /api/queries:
  *   get:
- *     summary: Retrieve all user queries
+ *     summary: Get all queries
  *     tags: [Queries]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: A list of user queries
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 queries:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       query:
- *                         type: string
- *                       timestamp:
- *                         type: string
+ *         description: A list of queries
  *       500:
  *         description: Server error
  */
-router.get('/',protectRoute, getQueries);
+
+/**
+ * @swagger
+ * /api/queries/{id}:
+ *   delete:
+ *     summary: Delete a query by ID
+ *     tags: [Queries]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Query deleted successfully
+ *       500:
+ *         description: Server error
+ */
+
+router.get('/', protectRoute, queryController.getQueries);
+router.delete('/:id', protectRoute, queryController.deleteQuery);
 
 module.exports = router;
