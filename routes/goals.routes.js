@@ -143,15 +143,34 @@ router.delete('/:id', protectRoute, goalsController.deleteGoal);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               targetValue:
- *                 type: number
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 title:
+ *                   type: string
+ *                 targetValue:
+ *                   type: number
+ *                 currentValue:
+ *                   type: number
  *     responses:
  *       201:
  *         description: Key Result added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   title:
+ *                     type: string
+ *                   currentValue:
+ *                     type: number
+ *                   targetValue:
+ *                     type: number
  *       500:
  *         description: Server error
  */
@@ -180,12 +199,16 @@ router.delete('/:id', protectRoute, goalsController.deleteGoal);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               targetValue:
- *                 type: number
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 title:
+ *                   type: string
+ *                 targetValue:
+ *                   type: number
+ *                 currentValue:
+ *                   type: number
  *     responses:
  *       200:
  *         description: Key Result updated successfully

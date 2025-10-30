@@ -127,26 +127,35 @@ class GoalsService {
 
   async createKeyResult(goalId, keyResultData) {
     const goal = await this.getGoalById(goalId);
-    const newKeyResult = { ...keyResultData, id: generateId(), currentValue: 0 };
-    goal.keyResults.push(newKeyResult);
+    const keyResults = Array.isArray(keyResultData) ? keyResultData : [keyResultData];
+    const newKeyResults = keyResults.map(kr => ({ ...kr, id: generateId(), currentValue: 0 }));
+    goal.keyResults.push(...newKeyResults);
     await this.updateGoal(goalId, goal);
-    return newKeyResult;
+    return newKeyResults;
   }
 
   async updateKeyResult(goalId, krId, keyResultData) {
     const goal = await this.getGoalById(goalId);
-    const keyResultIndex = goal.keyResults.findIndex(kr => kr.id === krId);
+    const normalizedKrId = normalizeId(krId);
+    const keyResultIndex = goal.keyResults.findIndex(kr => kr.id === normalizedKrId);
     if (keyResultIndex === -1) {
       throw new Error(`Key Result with id ${krId} not found.`);
     }
-    goal.keyResults[keyResultIndex] = { ...goal.keyResults[keyResultIndex], ...keyResultData };
+
+    let dataToUpdate = keyResultData;
+    if (Array.isArray(keyResultData)) {
+      dataToUpdate = keyResultData[0];
+    }
+
+    goal.keyResults[keyResultIndex] = { ...goal.keyResults[keyResultIndex], ...dataToUpdate };
     await this.updateGoal(goalId, goal);
     return goal.keyResults[keyResultIndex];
   }
 
   async deleteKeyResult(goalId, krId) {
     const goal = await this.getGoalById(goalId);
-    goal.keyResults = goal.keyResults.filter(kr => kr.id !== krId);
+    const normalizedKrId = normalizeId(krId);
+    goal.keyResults = goal.keyResults.filter(kr => kr.id !== normalizedKrId);
     await this.updateGoal(goalId, goal);
     return { success: true };
   }
