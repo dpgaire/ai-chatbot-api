@@ -18,6 +18,7 @@ const codeLogRoutes = require('./routes/code-log.routes');
 const taskRoutes = require('./routes/task.routes');
 const expensesRoutes = require('./routes/expenses.routes');
 const goalsRoutes = require('./routes/goals.routes');
+const libraryRoutes = require('./routes/library.routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
@@ -46,6 +47,8 @@ app.use('/api/code-log',codeLogRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/expenses', expensesRoutes);
 app.use('/api/goals', goalsRoutes);
+app.use('/api/library', libraryRoutes);
+
 
 const swaggerUiOptions = {
   swaggerOptions: {
