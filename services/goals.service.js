@@ -128,7 +128,7 @@ class GoalsService {
   async createKeyResult(goalId, keyResultData) {
     const goal = await this.getGoalById(goalId);
     const keyResults = Array.isArray(keyResultData) ? keyResultData : [keyResultData];
-    const newKeyResults = keyResults.map(kr => ({ ...kr, id: generateId(), currentValue: 0 }));
+    const newKeyResults = keyResults.map(kr => ({ ...kr, id: generateId() }));
     goal.keyResults.push(...newKeyResults);
     await this.updateGoal(goalId, goal);
     return newKeyResults;
