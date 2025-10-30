@@ -12,6 +12,25 @@ A serverless Node.js application that creates a personal AI chatbot using Qdrant
 - **CORS Support**: Cross-origin requests enabled for frontend integration
 - **Error Handling**: Comprehensive error handling and validation
 
+### API Endpoints
+
+- **Chat**: `POST /api/chat`
+- **Train**: `POST /api/train`
+- **Projects**: `GET, POST, PUT, DELETE /api/projects`
+- **Blogs**: `GET, POST, PUT, DELETE /api/blogs`
+- **Skills**: `GET, POST, PUT, DELETE /api/skills`
+- **About**: `GET, POST, PUT, DELETE /api/about`
+- **Contact**: `GET, POST, PUT, DELETE /api/contact`
+- **Auth**: `POST /api/auth/login`
+- **Stats**: `GET /api/stats`
+- **Notes**: `GET, POST, PUT, DELETE /api/notes`
+- **Quicklinks**: `GET, POST, PUT, DELETE /api/quicklinks`
+- **Code-Log**: `GET, POST, PUT, DELETE /api/code-log`
+- **Tasks**: `GET, POST, PUT, DELETE /api/tasks`
+- **Expenses**: `GET, POST, PUT, DELETE /api/expenses`
+- **Goals**: `GET, POST, PUT, DELETE /api/goals`
+- **Key Results**: `POST, PUT, DELETE /api/goals/{goalId}/key-results`
+
 ## Architecture
 
 The application consists of two main API endpoints:
@@ -51,6 +70,15 @@ GEMINI_API_KEY=your_gemini_api_key_here
 QDRANT_URL=https://your-qdrant-cluster.qdrant.tech:6333
 QDRANT_API_KEY=your_qdrant_api_key_here
 COLLECTION_NAME=personal_data
+PROJECT_COLLECTION_NAME=projects
+BLOG_COLLECTION_NAME=blogs
+SKILL_COLLECTION_NAME=skills
+ABOUT_COLLECTION_NAME=about
+CONTACT_COLLECTION_NAME=contact
+JWT_SECRET=your-jwt-secret
+TASK_COLLECTION_NAME=tasks
+EXPENSES_COLLECTION_NAME=expenses
+GOALS_COLLECTION_NAME=goals
 ```
 
 ### 3. Getting API Keys
@@ -84,11 +112,6 @@ In your Vercel dashboard, add the following environment variables:
 - `QDRANT_URL`: Your Qdrant cluster URL
 - `QDRANT_API_KEY`: Your Qdrant API key  
 - `COLLECTION_NAME`: Your collection name (default: personal_data)
-
-#### Deploy
-```bash
-vercel --prod
-```
 
 ## API Documentation
 
@@ -151,71 +174,117 @@ Queries the chatbot with context retrieval from personal data.
 }
 ```
 
-## Usage Examples
+### Expenses API
 
-### Training the Chatbot
+#### `POST /api/expenses`
 
-Store personal information about yourself:
+Adds a new expense.
 
-```bash
-# Store personal information
-curl -X POST http://localhost:3000/api/train \
-  -H "Content-Type: application/json" \
-  -d '{
-    "id": "personal_info_1",
-    "text": "I am a software developer who loves working with AI and machine learning. I have 5 years of experience in Python and JavaScript."
-  }'
-
-# Store work experience
-curl -X POST http://localhost:3000/api/train \
-  -H "Content-Type: application/json" \
-  -d '{
-    "id": "work_experience_1", 
-    "text": "I worked at TechCorp from 2020-2023 as a Senior Developer, where I led a team of 4 developers and built scalable web applications using React and Node.js."
-  }'
-
-# Store interests and hobbies
-curl -X POST http://localhost:3000/api/train \
-  -H "Content-Type: application/json" \
-  -d '{
-    "id": "interests_1",
-    "text": "In my free time, I enjoy hiking, reading science fiction novels, and experimenting with new programming languages. I am particularly interested in Rust and Go."
-  }'
+**Request Body:**
+```json
+{
+  "date": "2024-01-15",
+  "category": "Office Supplies",
+  "amount": 50.00,
+  "description": "New keyboard and mouse"
+}
 ```
 
-### Chatting with the Bot
+#### `GET /api/expenses`
 
-Ask questions about your stored personal data:
+Retrieves all expenses.
 
-```bash
-# Ask about work experience
-curl -X POST http://localhost:3000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "Tell me about my work experience"
-  }'
+#### `GET /api/expenses/{id}`
 
-# Ask about technical skills
-curl -X POST http://localhost:3000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "What programming languages do I know?"
-  }'
+Retrieves a single expense by ID.
 
-# Ask about hobbies
-curl -X POST http://localhost:3000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "What do I like to do in my free time?"
-  }'
+#### `PUT /api/expenses/{id}`
 
-# General conversation
-curl -X POST http://localhost:3000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "What should I learn next based on my interests?"
-  }'
+Updates an expense.
+
+**Request Body:**
+```json
+{
+  "date": "2024-01-16",
+  "category": "Software",
+  "amount": 200.00,
+  "description": "Annual software license"
+}
 ```
+
+#### `DELETE /api/expenses/{id}`
+
+Deletes an expense.
+
+### Goals API
+
+#### `POST /api/goals`
+
+Adds a new goal.
+
+**Request Body:**
+```json
+{
+  "title": "Launch New Product Feature",
+  "description": "Develop and release a highly anticipated new feature to improve user engagement.",
+  "targetDate": "2025-12-31"
+}
+```
+
+#### `GET /api/goals`
+
+Retrieves all goals.
+
+#### `GET /api/goals/{id}`
+
+Retrieves a single goal by ID.
+
+#### `PUT /api/goals/{id}`
+
+Updates a goal.
+
+**Request Body:**
+```json
+{
+  "title": "Launch V2 of New Product Feature",
+  "description": "Develop and release V2 of the new feature.",
+  "targetDate": "2026-06-30"
+}
+```
+
+#### `DELETE /api/goals/{id}`
+
+Deletes a goal.
+
+### Key Results API
+
+#### `POST /api/goals/{goalId}/key-results`
+
+Adds a new key result to a goal.
+
+**Request Body:**
+```json
+{
+  "title": "Achieve 10% increase in daily active users",
+  "targetValue": 10
+}
+```
+
+#### `PUT /api/goals/{goalId}/key-results/{krId}`
+
+Updates a key result.
+
+**Request Body:**
+```json
+{
+  "title": "Achieve 20% increase in daily active users",
+  "targetValue": 20
+}
+```
+
+#### `DELETE /api/goals/{goalId}/key-results/{krId}`
+
+Deletes a key result.
 
 ## Project Structure
 
