@@ -12,9 +12,9 @@ const saveUser = async ({ fullName, email }) => {
   return user;
 };
 
-const saveChatHistory = async ({ userId, title, messages }) => {
+const saveChatHistory = async ({ userId, email,fullName,title, messages }) => {
   const chatId = generateId();
-  const chatHistory = { id: chatId, payload: { userId, title, messages } };
+  const chatHistory = { id: chatId, payload: { userId, email,fullName, title, messages } };
   await qdrantManager.upsertPoint(CHAT_HISTORY_COLLECTION, [chatHistory]);
   return chatHistory;
 };

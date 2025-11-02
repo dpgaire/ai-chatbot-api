@@ -90,11 +90,11 @@ const saveUser = async (req, res) => {
 
 const saveChatHistory = async (req, res) => {
   try {
-    const { userId, title, messages } = req.body;
+    const { userId,email,fullName, title, messages } = req.body;
     if (!userId || !title || !messages) {
       return res.status(400).json({ error: 'Missing required fields: userId, title, and messages' });
     }
-    const chatHistory = await chatService.saveChatHistory({ userId, title, messages });
+    const chatHistory = await chatService.saveChatHistory({ userId,email,fullName, title, messages });
     res.status(201).json({ success: true, chatHistory });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
