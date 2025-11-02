@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const taskController = require('../controllers/task.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -110,10 +111,10 @@ const protectRoute = require('../middleware/auth.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, taskController.addTask);
-router.get('/', protectRoute, taskController.getTasks);
-router.get('/:id', protectRoute, taskController.getTaskById);
-router.put('/:id', protectRoute, taskController.updateTask);
-router.delete('/:id', protectRoute, taskController.deleteTask);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), taskController.addTask);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), taskController.getTasks);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), taskController.getTaskById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), taskController.updateTask);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), taskController.deleteTask);
 
 module.exports = router;

@@ -2,7 +2,7 @@ const goalsService = require('../services/goals.service');
 
 const addGoal = async (req, res) => {
   try {
-    const goal = await goalsService.addGoal(req.body);
+    const goal = await goalsService.addGoal(req.body, req.user.id);
     res.status(201).json(goal);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -11,7 +11,7 @@ const addGoal = async (req, res) => {
 
 const getGoals = async (req, res) => {
   try {
-    const goals = await goalsService.getGoals();
+    const goals = await goalsService.getGoals(req.user.id, req.user.role);
     res.status(200).json(goals);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -29,7 +29,7 @@ const getGoalById = async (req, res) => {
 
 const updateGoal = async (req, res) => {
   try {
-    const goal = await goalsService.updateGoal(req.params.id, req.body);
+    const goal = await goalsService.updateGoal(req.params.id, req.body, req.user.id, req.user.role);
     res.status(200).json(goal);
   } catch (error) {
     res.status(500).json({ message: error.message });

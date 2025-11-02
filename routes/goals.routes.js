@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const goalsController = require('../controllers/goals.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -116,11 +117,11 @@ const protectRoute = require('../middleware/auth.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, goalsController.addGoal);
-router.get('/', protectRoute, goalsController.getGoals);
-router.get('/:id', protectRoute, goalsController.getGoalById);
-router.put('/:id', protectRoute, goalsController.updateGoal);
-router.delete('/:id', protectRoute, goalsController.deleteGoal);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.addGoal);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.getGoals);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.getGoalById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.updateGoal);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.deleteGoal);
 
 // Key Results
 
@@ -237,8 +238,8 @@ router.delete('/:id', protectRoute, goalsController.deleteGoal);
  *         description: Server error
  */
 
-router.post('/:goalId/key-results', protectRoute, goalsController.createKeyResult);
-router.put('/:goalId/key-results/:krId', protectRoute, goalsController.updateKeyResult);
-router.delete('/:goalId/key-results/:krId', protectRoute, goalsController.deleteKeyResult);
+router.post('/:goalId/key-results', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.createKeyResult);
+router.put('/:goalId/key-results/:krId', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.updateKeyResult);
+router.delete('/:goalId/key-results/:krId', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.deleteKeyResult);
 
 module.exports = router;

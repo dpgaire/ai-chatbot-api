@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const codeLogController = require('../controllers/code-log.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -110,10 +111,10 @@ const protectRoute = require('../middleware/auth.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, codeLogController.addCodeLog);
-router.get('/', protectRoute, codeLogController.getCodeLogs);
-router.get('/:id', protectRoute, codeLogController.getCodeLogById);
-router.put('/:id', protectRoute, codeLogController.updateCodeLog);
-router.delete('/:id', protectRoute, codeLogController.deleteCodeLog);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), codeLogController.addCodeLog);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), codeLogController.getCodeLogs);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), codeLogController.getCodeLogById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), codeLogController.updateCodeLog);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), codeLogController.deleteCodeLog);
 
 module.exports = router;

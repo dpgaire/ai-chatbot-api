@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const blogController = require('../controllers/blog.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -206,11 +207,11 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/', protectRoute, blogController.addBlog);
-router.get('/', blogController.getBlogs);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.addBlog);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.getBlogs);
 router.get('/:id', blogController.getBlogById);
-router.put('/:id', protectRoute, blogController.updateBlog);
-router.delete('/:id', protectRoute, blogController.deleteBlog);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.updateBlog);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.deleteBlog);
 router.put('/:id/view', blogController.incrementViewCount);
 
 module.exports = router;

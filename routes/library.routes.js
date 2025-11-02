@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const libraryController = require('../controllers/library.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -132,10 +133,10 @@ const protectRoute = require('../middleware/auth.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, libraryController.addLibrary);
-router.get('/', protectRoute, libraryController.getLibraries);
-router.get('/:id', protectRoute, libraryController.getLibraryById);
-router.put('/:id', protectRoute, libraryController.updateLibrary);
-router.delete('/:id', protectRoute, libraryController.deleteLibrary);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), libraryController.addLibrary);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), libraryController.getLibraries);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), libraryController.getLibraryById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), libraryController.updateLibrary);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), libraryController.deleteLibrary);
 
 module.exports = router;

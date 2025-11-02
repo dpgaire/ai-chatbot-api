@@ -124,6 +124,7 @@ class AuthService {
       return {
         id: response.points[0].id,
         email: user.email,
+        role: user.role,
       };
     } catch (error) {
       console.error("Error during login:", error.message, error.status, error.data);

@@ -33,7 +33,7 @@ class BlogService {
     }
   }
 
-  async addBlog(blogData) {
+  async addBlog(blogData, userId) {
     await this.ensureCollection();
 
     const embedding = await this.geminiManager.generateEmbedding(blogData.content);
@@ -42,7 +42,7 @@ class BlogService {
     const point = {
       id: id,
       vector: embedding,
-      payload: { ...blogData, views: [] },
+      payload: { ...blogData, views: [], userId },
     };
 
     await this.client.upsert(this.collectionName, {
@@ -53,10 +53,23 @@ class BlogService {
     return { success: true, id };
   }
 
-  async getBlogs() {
+  async getBlogs(userId, role) {
     await this.ensureCollection();
 
+    let filter = {};
+    if (role !== 'superAdmin' && role !== 'Admin') {
+      filter = {
+        must: [
+          {
+            key: "userId",
+            match: { value: userId },
+          },
+        ],
+      };
+    }
+
     const response = await this.client.scroll(this.collectionName, {
+      filter,
       limit: 100, // Adjust the limit as needed
       with_payload: true,
     });
@@ -64,7 +77,7 @@ class BlogService {
     return response.points.map(point => ({ id: point.id, ...point.payload }));
   }
 
-  async updateBlog(id, blogData) {
+  async updateBlog(id, blogData, userId, role) {
     await this.ensureCollection();
     console.log('Updating Blog - ID:', id);
     console.log('Updating Blog - Data:', blogData);
@@ -73,6 +86,18 @@ class BlogService {
 
 
     try {
+      const existingPoint = await this.client.retrieve(this.collectionName, {
+        ids: [pointId],
+      });
+
+      if (existingPoint.length === 0) {
+        throw new Error(`Point with id ${id} not found`);
+      }
+
+      if (role !== 'superAdmin' && role !== 'Admin' && existingPoint[0].payload.userId !== userId) {
+        throw new Error('Forbidden');
+      }
+
       const embedding = await this.geminiManager.generateEmbedding(blogData.content);
 
       const point = {
@@ -93,18 +118,22 @@ class BlogService {
     }
   }
 
-  async deleteBlog(id) {
+  async deleteBlog(id, userId, role) {
     await this.ensureCollection();
     try {
         const pointId = normalizeId(id);
       const retrieveResponse = await this.client.retrieve(this.collectionName, {
         ids: [pointId],
-        with_payload: false,
+        with_payload: true,
       });
       console.log('Qdrant Retrieve Response for delete:', retrieveResponse);
 
       if (retrieveResponse.length === 0) {
         throw new Error(`Point with id ${pointId} not found.`);
+      }
+
+      if (role !== 'superAdmin' && role !== 'Admin' && retrieveResponse[0].payload.userId !== userId) {
+        throw new Error('Forbidden');
       }
 
       await this.client.delete(this.collectionName, {

@@ -2,7 +2,7 @@ const blogService = require('../services/blog.service');
 
 const addBlog = async (req, res) => {
   try {
-    const blog = await blogService.addBlog(req.body);
+    const blog = await blogService.addBlog(req.body, req.user.id);
     res.status(201).json(blog);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -11,7 +11,7 @@ const addBlog = async (req, res) => {
 
 const getBlogs = async (req, res) => {
   try {
-    const blogs = await blogService.getBlogs();
+    const blogs = await blogService.getBlogs(req.user.id, req.user.role);
     res.status(200).json(blogs);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -20,7 +20,7 @@ const getBlogs = async (req, res) => {
 
 const updateBlog = async (req, res) => {
   try {
-    const blog = await blogService.updateBlog(req.params.id, req.body);
+    const blog = await blogService.updateBlog(req.params.id, req.body, req.user.id, req.user.role);
     res.status(200).json(blog);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -29,7 +29,7 @@ const updateBlog = async (req, res) => {
 
 const deleteBlog = async (req, res) => {
   try {
-    await blogService.deleteBlog(req.params.id);
+    await blogService.deleteBlog(req.params.id, req.user.id, req.user.role);
     res.status(200).json({ message: 'Blog deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

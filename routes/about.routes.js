@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const aboutController = require('../controllers/about.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -102,9 +103,9 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/', protectRoute, aboutController.addAbout);
-router.get('/', aboutController.getAbout);
-router.put('/:id', protectRoute, aboutController.updateAbout);
-router.delete('/:id', protectRoute, aboutController.deleteAbout);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), aboutController.addAbout);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), aboutController.getAbout);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), aboutController.updateAbout);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), aboutController.deleteAbout);
 
 module.exports = router;

@@ -1,22 +1,23 @@
+
 const express = require('express');
 const router = express.Router();
-const expensesController = require('../controllers/expenses.controller');
+const userController = require('../controllers/user.controller');
 const protectRoute = require('../middleware/auth.middleware');
 const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
  * tags:
- *   name: Expenses
- *   description: Expense management
+ *   name: Users
+ *   description: User management
  */
 
 /**
  * @swagger
- * /api/expenses:
+ * /api/users:
  *   post:
- *     summary: Add a new expense
- *     tags: [Expenses]
+ *     summary: Create a new user
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -25,39 +26,52 @@ const authorize = require('../middleware/role.middleware');
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - role
  *             properties:
- *               date:
+ *               email:
  *                 type: string
- *                 format: date
- *               category:
+ *                 format: email
+ *               password:
  *                 type: string
- *               amount:
- *                 type: number
- *               description:
+ *                 format: password
+ *               role:
  *                 type: string
+ *                 enum: [superAdmin, Admin, User]
  *     responses:
  *       201:
- *         description: Expense added successfully
+ *         description: User created successfully
+ *       400:
+ *         description: Email, password, and role are required
  *       500:
  *         description: Server error
+ */
+router.post('/', protectRoute, authorize(['superAdmin']), userController.createUser);
+
+/**
+ * @swagger
+ * /api/users:
  *   get:
- *     summary: Get all expenses
- *     tags: [Expenses]
+ *     summary: Get all users
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: A list of expenses
+ *         description: A list of users
  *       500:
  *         description: Server error
  */
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), userController.getUsers);
 
 /**
  * @swagger
- * /api/expenses/{id}:
+ * /api/users/{id}:
  *   get:
- *     summary: Get an expense by ID
- *     tags: [Expenses]
+ *     summary: Get a user by ID
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -68,12 +82,20 @@ const authorize = require('../middleware/role.middleware');
  *           type: string
  *     responses:
  *       200:
- *         description: A single expense
+ *         description: A single user
+ *       404:
+ *         description: User not found
  *       500:
  *         description: Server error
+ */
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), userController.getUserById);
+
+/**
+ * @swagger
+ * /api/users/{id}:
  *   put:
- *     summary: Update an expense
- *     tags: [Expenses]
+ *     summary: Update a user
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -89,23 +111,29 @@ const authorize = require('../middleware/role.middleware');
  *           schema:
  *             type: object
  *             properties:
- *               date:
+ *               email:
  *                 type: string
- *                 format: date
- *               category:
+ *                 format: email
+ *               password:
  *                 type: string
- *               amount:
- *                 type: number
- *               description:
+ *                 format: password
+ *               role:
  *                 type: string
+ *                 enum: [superAdmin, Admin, User]
  *     responses:
  *       200:
- *         description: Expense updated successfully
+ *         description: User updated successfully
  *       500:
  *         description: Server error
+ */
+router.put('/:id', protectRoute, authorize(['superAdmin']), userController.updateUser);
+
+/**
+ * @swagger
+ * /api/users/{id}:
  *   delete:
- *     summary: Delete an expense
- *     tags: [Expenses]
+ *     summary: Delete a user
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -115,16 +143,11 @@ const authorize = require('../middleware/role.middleware');
  *         schema:
  *           type: string
  *     responses:
- *       200:
- *         description: Expense deleted successfully
+ *       204:
+ *         description: User deleted successfully
  *       500:
  *         description: Server error
  */
-
-router.post('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), expensesController.addExpense);
-router.get('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), expensesController.getExpenses);
-router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), expensesController.getExpenseById);
-router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), expensesController.updateExpense);
-router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), expensesController.deleteExpense);
+router.delete('/:id', protectRoute, authorize(['superAdmin']), userController.deleteUser);
 
 module.exports = router;

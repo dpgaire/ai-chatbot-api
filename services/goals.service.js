@@ -32,7 +32,7 @@ class GoalsService {
     }
   }
 
-  async addGoal(goalData) {
+  async addGoal(goalData, userId) {
     await this.ensureCollection();
 
     const embedding = await this.geminiManager.generateEmbedding(goalData.title);
@@ -41,7 +41,7 @@ class GoalsService {
     const point = {
       id: id,
       vector: embedding,
-      payload: { ...goalData, keyResults: [] },
+      payload: { ...goalData, keyResults: [], userId },
     };
 
     await this.client.upsert(this.collectionName, {
@@ -52,10 +52,23 @@ class GoalsService {
     return { success: true, id };
   }
 
-  async getGoals() {
+  async getGoals(userId, role) {
     await this.ensureCollection();
 
+    let filter = {};
+    if (role !== 'superAdmin' && role !== 'Admin') {
+      filter = {
+        must: [
+          {
+            key: "userId",
+            match: { value: userId },
+          },
+        ],
+      };
+    }
+
     const response = await this.client.scroll(this.collectionName, {
+      filter,
       limit: 100, // Adjust the limit as needed
       with_payload: true,
     });
@@ -76,11 +89,23 @@ class GoalsService {
     return { id: response[0].id, ...response[0].payload };
   }
 
-  async updateGoal(id, goalData) {
+  async updateGoal(id, goalData, userId, role) {
     await this.ensureCollection();
     const pointId = normalizeId(id);
 
     try {
+      const existingPoint = await this.client.retrieve(this.collectionName, {
+        ids: [pointId],
+      });
+
+      if (existingPoint.length === 0) {
+        throw new Error(`Point with id ${id} not found`);
+      }
+
+      if (role !== 'superAdmin' && role !== 'Admin' && existingPoint[0].payload.userId !== userId) {
+        throw new Error('Forbidden');
+      }
+
       const embedding = await this.geminiManager.generateEmbedding(goalData.title);
 
       const point = {

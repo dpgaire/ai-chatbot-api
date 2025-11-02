@@ -19,6 +19,7 @@ const taskRoutes = require('./routes/task.routes');
 const expensesRoutes = require('./routes/expenses.routes');
 const goalsRoutes = require('./routes/goals.routes');
 const libraryRoutes = require('./routes/library.routes');
+const userRoutes = require('./routes/user.routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
@@ -48,6 +49,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/expenses', expensesRoutes);
 app.use('/api/goals', goalsRoutes);
 app.use('/api/library', libraryRoutes);
+app.use('/api/users', userRoutes);
 
 
 const swaggerUiOptions = {

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const chatController = require('../controllers/chat.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 
 /**
@@ -53,7 +54,7 @@ router.post('/', chatController.chat);
  *       500:
  *         description: Server error
  */
-router.get('/users',protectRoute, chatController.getUsers);
+router.get('/users',protectRoute, authorize(['superAdmin', 'Admin']), chatController.getUsers);
 
 /**
  * @swagger
@@ -77,7 +78,7 @@ router.get('/users',protectRoute, chatController.getUsers);
  *       500:
  *         description: Server error
  */
-router.delete('/users/:id', protectRoute, chatController.deleteUser);
+router.delete('/users/:id', protectRoute, authorize(['superAdmin', 'Admin']), chatController.deleteUser);
 
 /**
  * @swagger

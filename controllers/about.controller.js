@@ -2,7 +2,7 @@ const aboutService = require('../services/about.service');
 
 const addAbout = async (req, res) => {
   try {
-    const about = await aboutService.addAbout(req.body);
+    const about = await aboutService.addAbout(req.body, req.user.id);
     res.status(201).json(about);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -11,7 +11,7 @@ const addAbout = async (req, res) => {
 
 const getAbout = async (req, res) => {
   try {
-    const about = await aboutService.getAbout();
+    const about = await aboutService.getAbout(req.user.id, req.user.role);
     res.status(200).json(about);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -20,7 +20,7 @@ const getAbout = async (req, res) => {
 
 const updateAbout = async (req, res) => {
   try {
-    const about = await aboutService.updateAbout(req.params.id, req.body);
+    const about = await aboutService.updateAbout(req.params.id, req.body, req.user.id, req.user.role);
     res.status(200).json(about);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -30,7 +30,7 @@ const updateAbout = async (req, res) => {
 const deleteAbout = async (req, res) => {
   try {
     console.log('req.params.id',req.params.id)
-    await aboutService.deleteAbout(req.params.id);
+    await aboutService.deleteAbout(req.params.id, req.user.id, req.user.role);
     res.status(200).json({ message: 'About deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

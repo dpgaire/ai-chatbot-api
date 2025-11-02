@@ -29,7 +29,7 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const accessToken = jwt.sign({ id: user.id, role: "admin" }, process.env.JWT_SECRET, {
+    const accessToken = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1h',
     });
     const refreshToken = jwt.sign({ id: user.id }, process.env.JWT_REFRESH_SECRET, {

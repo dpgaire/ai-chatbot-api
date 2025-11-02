@@ -32,7 +32,7 @@ class AboutService {
     }
   }
 
-  async addAbout(aboutData) {
+  async addAbout(aboutData, userId) {
     await this.ensureCollection();
 
     const embedding = await this.geminiManager.generateEmbedding(
@@ -43,7 +43,7 @@ class AboutService {
     const point = {
       id: id,
       vector: embedding,
-      payload: aboutData,
+      payload: { ...aboutData, userId },
     };
 
     await this.client.upsert(this.collectionName, {
@@ -54,10 +54,23 @@ class AboutService {
     return { success: true, id };
   }
 
-  async getAbout() {
+  async getAbout(userId, role) {
     await this.ensureCollection();
 
+    let filter = {};
+    if (role !== 'superAdmin' && role !== 'Admin') {
+      filter = {
+        must: [
+          {
+            key: "userId",
+            match: { value: userId },
+          },
+        ],
+      };
+    }
+
     const response = await this.client.scroll(this.collectionName, {
+      filter,
       limit: 100,
       with_payload: true,
     });
@@ -65,7 +78,7 @@ class AboutService {
     return response.points.map((point) => ({ id: point.id, ...point.payload }));
   }
 
-  async updateAbout(id, aboutData) {
+  async updateAbout(id, aboutData, userId, role) {
     await this.ensureCollection();
     console.log("Updating About - ID:", id);
     console.log("Updating About - Data:", aboutData);
@@ -80,6 +93,10 @@ class AboutService {
 
       if (existingPoint.length === 0) {
         throw new Error(`Point with id ${id} not found`);
+      }
+
+      if (role !== 'superAdmin' && role !== 'Admin' && existingPoint[0].payload.userId !== userId) {
+        throw new Error('Forbidden');
       }
 
       const embedding = await this.geminiManager.generateEmbedding(
@@ -104,7 +121,7 @@ class AboutService {
     }
   }
 
-  async deleteAbout(id) {
+  async deleteAbout(id, userId, role) {
     await this.ensureCollection();
     try {
       // Convert ID to the correct type if needed
@@ -117,6 +134,10 @@ class AboutService {
 
       if (existingPoints.length === 0) {
         throw new Error(`Point with id ${id} not found`);
+      }
+
+      if (role !== 'superAdmin' && role !== 'Admin' && existingPoints[0].payload.userId !== userId) {
+        throw new Error('Forbidden');
       }
 
       await this.client.delete(this.collectionName, {
