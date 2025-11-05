@@ -2,7 +2,7 @@ const quickLinkService = require('../services/quicklink.service');
 
 const addQuickLink = async (req, res) => {
   try {
-    const link = await quickLinkService.addQuickLink(req.body);
+    const link = await quickLinkService.addQuickLink(req.body, req.user.id);
     res.status(201).json(link);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -11,7 +11,7 @@ const addQuickLink = async (req, res) => {
 
 const getQuickLinks = async (req, res) => {
   try {
-    const links = await quickLinkService.getQuickLinks();
+    const links = await quickLinkService.getQuickLinks(req.user.id, req.user.role);
     res.status(200).json(links);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -29,7 +29,7 @@ const getQuickLinkById = async (req, res) => {
 
 const updateQuickLink = async (req, res) => {
   try {
-    const link = await quickLinkService.updateQuickLink(req.params.id, req.body);
+    const link = await quickLinkService.updateQuickLink(req.params.id, req.body, req.user.id, req.user.role);
     res.status(200).json(link);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -38,7 +38,7 @@ const updateQuickLink = async (req, res) => {
 
 const deleteQuickLink = async (req, res) => {
   try {
-    await quickLinkService.deleteQuickLink(req.params.id);
+    await quickLinkService.deleteQuickLink(req.params.id, req.user.id, req.user.role);
     res.status(200).json({ message: 'Quick Link deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

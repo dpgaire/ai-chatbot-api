@@ -1,7 +1,7 @@
 const userService = require("../services/user.service");
 
 const createUser = async (req, res) => {
-  const { email, password, role } = req.body;
+  const { email,fullName, password, role } = req.body;
 
   if (!email || !password || !role) {
     return res
@@ -10,7 +10,7 @@ const createUser = async (req, res) => {
   }
 
   try {
-    const user = await userService.createUser(email, password, role);
+    const user = await userService.createUser(email,fullName, password, role);
 
     res.status(201).json(user);
   } catch (error) {

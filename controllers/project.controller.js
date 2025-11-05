@@ -1,8 +1,8 @@
-const projectService = require('../services/project.service');
+const projectService = require("../services/project.service");
 
 const addProject = async (req, res) => {
   try {
-    const project = await projectService.addProject(req.body);
+    const project = await projectService.addProject(req.body, req.user.id);
     res.status(201).json(project);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -11,7 +11,10 @@ const addProject = async (req, res) => {
 
 const getProjects = async (req, res) => {
   try {
-    const projects = await projectService.getProjects();
+    const projects = await projectService.getProjects(
+      req.user.id,
+      req.user.role
+    );
     res.status(200).json(projects);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -20,7 +23,12 @@ const getProjects = async (req, res) => {
 
 const updateProject = async (req, res) => {
   try {
-    const project = await projectService.updateProject(req.params.id, req.body);
+    const project = await projectService.updateProject(
+      req.params.id,
+      req.body,
+      req.user.id,
+      req.user.role
+    );
     res.status(200).json(project);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -29,8 +37,12 @@ const updateProject = async (req, res) => {
 
 const deleteProject = async (req, res) => {
   try {
-    await projectService.deleteProject(req.params.id);
-    res.status(200).json({ message: 'Project deleted successfully' });
+    await projectService.deleteProject(
+      req.params.id,
+      req.user.id,
+      req.user.role
+    );
+    res.status(200).json({ message: "Project deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -47,7 +59,9 @@ const getProjectById = async (req, res) => {
 
 const incrementViewCount = async (req, res) => {
   try {
-    const { title, views } = await projectService.incrementViewCount(req.params.id);
+    const { title, views } = await projectService.incrementViewCount(
+      req.params.id
+    );
     res.status(200).json({ title, views });
   } catch (error) {
     res.status(500).json({ message: error.message });

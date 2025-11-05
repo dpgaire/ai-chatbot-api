@@ -225,7 +225,7 @@ const authorize = require('../middleware/role.middleware');
  *         description: Server error
  */
 router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), projectController.addProject);
-router.get('/', projectController.getProjects);
+router.get('/', protectRoute,authorize(['superAdmin', 'Admin','User']), projectController.getProjects);
 router.get('/:id', projectController.getProjectById);
 router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), projectController.updateProject);
 router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), projectController.deleteProject);
