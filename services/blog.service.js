@@ -31,6 +31,19 @@ class BlogService {
         throw error;
       }
     }
+    try {
+      await this.client.createPayloadIndex(this.collectionName, {
+        field_name: "userId",
+        field_schema: "integer",
+      });
+      console.log(`Index for 'userId' ensured on '${this.collectionName}'`);
+    } catch (indexError) {
+      if (indexError.message?.includes("already exists")) {
+        console.log(`Index for 'userId' already exists`);
+      } else {
+        console.error("Error ensuring index for userId:", indexError);
+      }
+    }
   }
 
   async addBlog(blogData, userId) {
@@ -56,9 +69,13 @@ class BlogService {
   async getBlogs(userId, role) {
     await this.ensureCollection();
 
-    let filter = {};
+    let queryOptions = {
+      limit: 100,
+      with_payload: true,
+    };
+
     if (role !== 'superAdmin' && role !== 'Admin') {
-      filter = {
+      queryOptions.filter = {
         must: [
           {
             key: "userId",
@@ -68,42 +85,42 @@ class BlogService {
       };
     }
 
-    const response = await this.client.scroll(this.collectionName, {
-      filter,
-      limit: 100, // Adjust the limit as needed
-      with_payload: true,
-    });
+    const response = await this.client.scroll(this.collectionName, queryOptions);
 
     return response.points.map(point => ({ id: point.id, ...point.payload }));
   }
 
   async updateBlog(id, blogData, userId, role) {
     await this.ensureCollection();
-    console.log('Updating Blog - ID:', id);
-    console.log('Updating Blog - Data:', blogData);
-
-     const pointId = normalizeId(id);
-
+    const pointId = normalizeId(id);
 
     try {
       const existingPoint = await this.client.retrieve(this.collectionName, {
         ids: [pointId],
+        with_payload: true,
       });
 
       if (existingPoint.length === 0) {
         throw new Error(`Point with id ${id} not found`);
       }
 
-      if (role !== 'superAdmin' && role !== 'Admin' && existingPoint[0].payload.userId !== userId) {
-        throw new Error('Forbidden');
+      const existingPayload = existingPoint[0].payload;
+
+      if (role !== 'superAdmin' && role !== 'Admin' && String(existingPayload.userId) !== String(userId)) {
+        throw new Error("Forbidden: You do not own this record");
       }
 
       const embedding = await this.geminiManager.generateEmbedding(blogData.content);
 
+      const updatedPayload = {
+        ...existingPayload,
+        ...blogData,
+      };
+
       const point = {
         id: pointId,
         vector: embedding,
-        payload: blogData,
+        payload: updatedPayload,
       };
 
       await this.client.upsert(this.collectionName, {
@@ -113,7 +130,7 @@ class BlogService {
 
       return { success: true, id: pointId };
     } catch (error) {
-      console.error('Error updating point in Qdrant:', error); // Log the full error object
+      console.error('Error updating point in Qdrant:', error);
       throw error;
     }
   }
@@ -126,7 +143,6 @@ class BlogService {
         ids: [pointId],
         with_payload: true,
       });
-      console.log('Qdrant Retrieve Response for delete:', retrieveResponse);
 
       if (retrieveResponse.length === 0) {
         throw new Error(`Point with id ${pointId} not found.`);
@@ -142,7 +158,7 @@ class BlogService {
 
       return { success: true };
     } catch (error) {
-      console.error('Error deleting point from Qdrant:', error); // Log the full error object
+      console.error('Error deleting point from Qdrant:', error);
       throw error;
     }
   }
@@ -160,7 +176,7 @@ class BlogService {
     return { id: response[0].id, ...response[0].payload };
   }
 
-  async incrementViewCount(id) {
+  async incrementViewCount(id, userId, role) {
     await this.ensureCollection();
     const pointId = normalizeId(id);
 
@@ -168,9 +184,7 @@ class BlogService {
     const views = blog.views || [];
     views.push({ timestamp: new Date() });
 
-    const updatedBlog = { ...blog, views };
-
-    await this.updateBlog(pointId, updatedBlog);
+    await this.updateBlog(pointId, { views }, userId, role);
 
     return { success: true, title: blog.title, views, viewCount: views.length };
   }

@@ -30,6 +30,19 @@ class ContactService {
         throw error;
       }
     }
+    try {
+      await this.client.createPayloadIndex(this.collectionName, {
+        field_name: "userId",
+        field_schema: "integer",
+      });
+      console.log(`Index for 'userId' ensured on '${this.collectionName}'`);
+    } catch (indexError) {
+      if (indexError.message?.includes("already exists")) {
+        console.log(`Index for 'userId' already exists`);
+      } else {
+        console.error("Error ensuring index for userId:", indexError);
+      }
+    }
   }
 
   async addContact(contactData, userId) {
@@ -56,9 +69,13 @@ class ContactService {
   async getContact(userId, role) {
     await this.ensureCollection();
 
-    let filter = {};
+    let queryOptions = {
+      limit: 100,
+      with_payload: true,
+    };
+
     if (role !== 'superAdmin' && role !== 'Admin') {
-      filter = {
+      queryOptions.filter = {
         must: [
           {
             key: "userId",
@@ -68,11 +85,7 @@ class ContactService {
       };
     }
 
-    const response = await this.client.scroll(this.collectionName, {
-      filter,
-      limit: 100, // Adjust the limit as needed
-      with_payload: true,
-    });
+    const response = await this.client.scroll(this.collectionName, queryOptions);
     return response.points.map((point) => ({ id: point.id, ...point.payload }));
   }
 
@@ -96,24 +109,32 @@ class ContactService {
     try {
       const existingPoint = await this.client.retrieve(this.collectionName, {
         ids: [pointId],
+        with_payload: true,
       });
 
       if (existingPoint.length === 0) {
         throw new Error(`Point with id ${id} not found`);
       }
 
-      if (role !== 'superAdmin' && role !== 'Admin' && existingPoint[0].payload.userId !== userId) {
-        throw new Error('Forbidden');
+      const existingPayload = existingPoint[0].payload;
+
+      if (role !== 'superAdmin' && role !== 'Admin' && String(existingPayload.userId) !== String(userId)) {
+        throw new Error("Forbidden: You do not own this record");
       }
 
       const embedding = await this.geminiManager.generateEmbedding(
         contactData.message
       );
 
+      const updatedPayload = {
+        ...existingPayload,
+        ...contactData,
+      };
+
       const point = {
         id: pointId,
         vector: embedding,
-        payload: contactData,
+        payload: updatedPayload,
       };
 
       await this.client.upsert(this.collectionName, {

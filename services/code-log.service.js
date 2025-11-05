@@ -1,5 +1,5 @@
-const { QdrantClient } = require('@qdrant/js-client-rest');
-const GeminiManager = require('./gemini.service');
+const { QdrantClient } = require("@qdrant/js-client-rest");
+const GeminiManager = require("./gemini.service");
 const { generateId, normalizeId } = require("../utils/generateId");
 
 class CodeLogService {
@@ -8,7 +8,7 @@ class CodeLogService {
       url: process.env.QDRANT_URL,
       apiKey: process.env.QDRANT_API_KEY,
     });
-    this.collectionName = process.env.CODE_LOG_COLLECTION_NAME || 'code_logs';
+    this.collectionName = process.env.CODE_LOG_COLLECTION_NAME || "code_logs";
     this.geminiManager = new GeminiManager();
   }
 
@@ -18,16 +18,27 @@ class CodeLogService {
       console.log(`Collection '${this.collectionName}' already exists`);
     } catch (error) {
       if (error.status === 404) {
-        console.log(`Creating collection '${this.collectionName}'`);
         await this.client.createCollection(this.collectionName, {
           vectors: {
             size: 768, // Gemini embedding size
-            distance: 'Cosine',
+            distance: "Cosine",
           },
         });
-        console.log(`Collection '${this.collectionName}' created successfully`);
       } else {
         throw error;
+      }
+    }
+    try {
+      await this.client.createPayloadIndex(this.collectionName, {
+        field_name: "userId",
+        field_schema: "integer", // or "keyword" if userId is stored as string
+      });
+      console.log(`Index for 'userId' ensured on '${this.collectionName}'`);
+    } catch (indexError) {
+      if (indexError.message?.includes("already exists")) {
+        console.log(`Index for 'userId' already exists`);
+      } else {
+        console.error("Error ensuring index for userId:", indexError);
       }
     }
   }
@@ -35,7 +46,9 @@ class CodeLogService {
   async addCodeLog(codeLogData, userId) {
     await this.ensureCollection();
 
-    const embedding = await this.geminiManager.generateEmbedding(codeLogData.code);
+    const embedding = await this.geminiManager.generateEmbedding(
+      codeLogData.code
+    );
     const id = codeLogData.id || generateId();
 
     const point = {
@@ -55,9 +68,14 @@ class CodeLogService {
   async getCodeLogs(userId, role) {
     await this.ensureCollection();
 
-    let filter = {};
-    if (role !== 'superAdmin' && role !== 'Admin') {
-      filter = {
+    let queryOptions = {
+      limit: 100,
+      with_payload: true,
+    };
+
+    // Only filter for non-admin users
+    if (role !== "superAdmin" && role !== "Admin") {
+      queryOptions.filter = {
         must: [
           {
             key: "userId",
@@ -67,13 +85,19 @@ class CodeLogService {
       };
     }
 
-    const response = await this.client.scroll(this.collectionName, {
-      filter,
-      limit: 100, // Adjust the limit as needed
-      with_payload: true,
-    });
-
-    return response.points.map(point => ({ id: point.id, ...point.payload }));
+    try {
+      const response = await this.client.scroll(
+        this.collectionName,
+        queryOptions
+      );
+      return response.points.map((point) => ({
+        id: point.id,
+        ...point.payload,
+      }));
+    } catch (err) {
+      console.error("Scroll error:", err);
+      throw err; // rethrow so you can see full message in your logs
+    }
   }
 
   async getCodeLogById(id) {
@@ -96,22 +120,40 @@ class CodeLogService {
     try {
       const existingPoint = await this.client.retrieve(this.collectionName, {
         ids: [pointId],
+        with_payload: true,
       });
 
       if (existingPoint.length === 0) {
         throw new Error(`Point with id ${id} not found`);
       }
 
-      if (role !== 'superAdmin' && role !== 'Admin' && existingPoint[0].payload.userId !== userId) {
-        throw new Error('Forbidden');
+      const existingPayload = existingPoint[0].payload;
+
+      // ✅ Role-based permission check
+      if (
+        role !== "superAdmin" &&
+        role !== "Admin" &&
+        String(existingPayload.userId) !== String(userId)
+      ) {
+        throw new Error("Forbidden: You do not own this record");
       }
 
-      const embedding = await this.geminiManager.generateEmbedding(codeLogData.code);
+      // ✅ Regenerate embedding if code changed
+      const embedding = await this.geminiManager.generateEmbedding(
+        codeLogData.code
+      );
+
+      // ✅ Preserve old payload fields (like userId)
+      const updatedPayload = {
+        ...existingPayload,
+        ...codeLogData,
+        userId: existingPayload.userId || userId, // make sure it's not lost
+      };
 
       const point = {
         id: pointId,
         vector: embedding,
-        payload: codeLogData,
+        payload: updatedPayload,
       };
 
       await this.client.upsert(this.collectionName, {
@@ -121,7 +163,7 @@ class CodeLogService {
 
       return { success: true, id: pointId };
     } catch (error) {
-      console.error('Error updating point in Qdrant:', error);
+      console.error("Error updating point in Qdrant:", error);
       throw error;
     }
   }
@@ -139,8 +181,12 @@ class CodeLogService {
         throw new Error(`Point with id ${pointId} not found.`);
       }
 
-      if (role !== 'superAdmin' && role !== 'Admin' && retrieveResponse[0].payload.userId !== userId) {
-        throw new Error('Forbidden');
+      if (
+        role !== "superAdmin" &&
+        role !== "Admin" &&
+        retrieveResponse[0].payload.userId !== userId
+      ) {
+        throw new Error("Forbidden");
       }
 
       await this.client.delete(this.collectionName, {
@@ -149,7 +195,7 @@ class CodeLogService {
 
       return { success: true };
     } catch (error) {
-      console.error('Error deleting point from Qdrant:', error);
+      console.error("Error deleting point from Qdrant:", error);
       throw error;
     }
   }

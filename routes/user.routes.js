@@ -64,7 +64,7 @@ router.post('/', protectRoute, authorize(['superAdmin']), userController.createU
  *       500:
  *         description: Server error
  */
-router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), userController.getUsers);
+router.get('/', protectRoute, authorize(['superAdmin']), userController.getUsers);
 
 /**
  * @swagger
@@ -88,7 +88,7 @@ router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), userController
  *       500:
  *         description: Server error
  */
-router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), userController.getUserById);
+router.get('/:id', protectRoute, authorize(['superAdmin']), userController.getUserById);
 
 /**
  * @swagger
