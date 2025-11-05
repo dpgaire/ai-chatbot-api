@@ -31,6 +31,10 @@ const authorize = require('../middleware/role.middleware');
  *               - password
  *               - role
  *             properties:
+ *               fullName:
+ *                 type: string
+ *               image:
+ *                 type: string
  *               email:
  *                 type: string
  *                 format: email
@@ -127,6 +131,85 @@ router.get('/:id', protectRoute, authorize(['superAdmin']), userController.getUs
  *         description: Server error
  */
 router.put('/:id', protectRoute, authorize(['superAdmin']), userController.updateUser);
+/**
+ * @swagger
+ * /api/users/profile/{id}:
+ *   put:
+ *     summary: Update user profile (self-update)
+ *     description: Allows an authenticated user to update their own profile details such as name, email, image, or regenerate API key.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user to update (should match the logged-in user's ID)
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *                 example: "Durga Gairhe"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "durga@example.com"
+ *               image:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://dpgaire.github.io/image-server/projects/durga.png"
+ *               regenerateApiKey:
+ *                 type: boolean
+ *                 description: Set to true to regenerate a new API key for the user.
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Profile updated successfully"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     fullName:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     image:
+ *                       type: string
+ *                     apiKey:
+ *                       type: string
+ *                       description: Newly generated API key (if regenerateApiKey was true)
+ *                       example: "sk_live_xxx_generated_token"
+ *                     role:
+ *                       type: string
+ *                       enum: [superAdmin, Admin, User]
+ *       400:
+ *         description: Invalid input data
+ *       401:
+ *         description: Unauthorized — Missing or invalid token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/profile/:id', protectRoute, authorize(['superAdmin','Admin', 'User', ]),userController.updateProfile);
+
+
 
 /**
  * @swagger

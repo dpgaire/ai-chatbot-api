@@ -10,6 +10,7 @@ const addAbout = async (req, res) => {
 };
 
 const getAbout = async (req, res) => {
+  console.log('req',req)
   try {
     const about = await aboutService.getAbout(req.user.id, req.user.role);
     res.status(200).json(about);

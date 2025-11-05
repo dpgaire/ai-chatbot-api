@@ -3,6 +3,7 @@ const router = express.Router();
 const blogController = require('../controllers/blog.controller');
 const protectRoute = require('../middleware/auth.middleware');
 const authorize = require('../middleware/role.middleware');
+const apiKeyAuth = require('../middleware/apiKey.middleware');
 
 /**
  * @swagger
@@ -208,7 +209,7 @@ const authorize = require('../middleware/role.middleware');
  *         description: Server error
  */
 router.post('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.addBlog);
-router.get('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.getBlogs);
+router.get('/', apiKeyAuth, blogController.getBlogs);
 router.get('/:id', blogController.getBlogById);
 router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.updateBlog);
 router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.deleteBlog);

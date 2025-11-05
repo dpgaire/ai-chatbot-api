@@ -3,8 +3,6 @@ const bcrypt = require('bcryptjs');
 const { generateId } = require("../utils/generateId");
 class AuthService {
   constructor() {
-    console.log("Qdrant URL:", process.env.QDRANT_URL);
-    console.log("Qdrant API Key:", process.env.QDRANT_API_KEY ? "Set" : "Not set");
     this.client = new QdrantClient({
       url: process.env.QDRANT_URL,
       apiKey: process.env.QDRANT_API_KEY,
@@ -15,24 +13,19 @@ class AuthService {
   async ensureCollection() {
     try {
       const collectionInfo = await this.client.getCollection(this.collectionName);
-      console.log(`Collection '${this.collectionName}' already exists`);
 
       // Check if 'email' index exists
       const hasEmailIndex = collectionInfo.payload_schema?.email?.data_type === 'keyword';
       if (!hasEmailIndex) {
-        console.log(`Creating index on 'email' field`);
         await this.client.createPayloadIndex(this.collectionName, {
           field_name: 'email',
           field_schema: 'keyword',
           wait: true, // Ensure index creation is synchronous
         });
-        console.log(`Index on 'email' field created successfully`);
       } else {
-        console.log(`Index on 'email' field already exists`);
       }
     } catch (error) {
       if (error.status === 404) {
-        console.log(`Creating collection '${this.collectionName}'`);
         await this.client.createCollection(this.collectionName, {
           vectors: {
             size: 4,
@@ -42,16 +35,13 @@ class AuthService {
             deleted_threshold: 0.9,
           },
         });
-        console.log(`Collection '${this.collectionName}' created successfully`);
 
         // Create index on 'email' field
-        console.log(`Creating index on 'email' field`);
         await this.client.createPayloadIndex(this.collectionName, {
           field_name: 'email',
           field_schema: 'keyword',
           wait: true,
         });
-        console.log(`Index on 'email' field created successfully`);
       } else {
         console.error("Error checking/creating collection:", error.message, error.status, error.data);
         throw error;
@@ -75,8 +65,7 @@ class AuthService {
       payload: { email, password: hashedPassword, role, fullName },
     };
 
-    const upsertResponse = await this.client.upsert(this.collectionName, { wait: true, points: [point] });
-    console.log("Upsert response:", upsertResponse);
+     await this.client.upsert(this.collectionName, { wait: true, points: [point] });
 
     return { id: userId, email, role, fullName };
   }
@@ -100,7 +89,6 @@ class AuthService {
         with_payload: true,
       });
 
-      console.log("Scroll response:", response);
 
       if (!response.points || response.points.length === 0) {
         console.log("No user found for email:", email);
@@ -109,7 +97,6 @@ class AuthService {
 
       const user = response.points[0].payload;
 
-      console.log('user',user)
 
       if (!user || !user.password) {
         console.log("User or password not found in payload:", user);
@@ -127,7 +114,9 @@ class AuthService {
         id: response.points[0].id,
         email: user.email,
         role: user.role,
-        fullName: user.fullName
+        fullName: user.fullName,
+        image: user.image,
+        apiKey: user.apiKey
       };
     } catch (error) {
       console.error("Error during login:", error.message, error.status, error.data);

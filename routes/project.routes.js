@@ -3,6 +3,7 @@ const router = express.Router();
 const projectController = require('../controllers/project.controller');
 const protectRoute = require('../middleware/auth.middleware');
 const authorize = require('../middleware/role.middleware');
+const apiKeyAuth = require('../middleware/apiKey.middleware');
 
 /**
  * @swagger
@@ -225,7 +226,7 @@ const authorize = require('../middleware/role.middleware');
  *         description: Server error
  */
 router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), projectController.addProject);
-router.get('/', protectRoute,authorize(['superAdmin', 'Admin','User']), projectController.getProjects);
+router.get('/', apiKeyAuth, projectController.getProjects);
 router.get('/:id', projectController.getProjectById);
 router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), projectController.updateProject);
 router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), projectController.deleteProject);

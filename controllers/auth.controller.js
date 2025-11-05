@@ -49,9 +49,10 @@ const login = async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       role: user.role,
-      image: "https://dpgaire.github.io/image-server/projects/durga.png",
+      image: user.image || "https://dpgaire.github.io/image-server/projects/fallback-user.png",
       accessToken,
       refreshToken,
+      apiKey: user.apiKey,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -92,9 +93,10 @@ const refreshToken = async (req, res) => {
       fullName: userDetails.fullName,
       email: userDetails.email,
       role: userDetails.role,
-      image: "https://dpgaire.github.io/image-server/projects/durga.png",
+      image: userDetails.image || "https://dpgaire.github.io/image-server/projects/fallback-user.png",
       accessToken,
       refreshToken: newRefreshToken,
+      apiKey: userDetails.apiKey,
     });
   } catch (err) {
     console.error("Refresh token error:", err);
@@ -104,8 +106,6 @@ const refreshToken = async (req, res) => {
 
 
 const logout = (req, res) => {
-  // For token-based auth, the client is responsible for destroying the token.
-  // The backend can simply confirm the logout.
   res.json({ message: "Logged out successfully" });
 };
 
