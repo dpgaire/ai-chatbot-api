@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const { exec } = require("child_process"); 
 
 const chatRoutes = require('./routes/chat.routes');
 const trainRoutes = require('./routes/train.routes');
@@ -20,6 +21,8 @@ const expensesRoutes = require('./routes/expenses.routes');
 const goalsRoutes = require('./routes/goals.routes');
 const libraryRoutes = require('./routes/library.routes');
 const userRoutes = require('./routes/user.routes');
+const runScriptRoutes = require('./routes/runscript.routes');
+const promptStorageRoutes = require('./routes/prompt-storage.routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
@@ -50,6 +53,8 @@ app.use('/api/expenses', expensesRoutes);
 app.use('/api/goals', goalsRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/runscripts', runScriptRoutes);
+app.use('/api/prompt-storage', promptStorageRoutes);
 
 
 const swaggerUiOptions = {

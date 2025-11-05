@@ -1,67 +1,40 @@
-const { QdrantClient } = require("@qdrant/js-client-rest");
-const { generateId, normalizeId } = require("../utils/generateId");
+const QdrantManager = require('./qdrant.service');
+const { generateId, normalizeId } = require('../utils/generateId');
 
-class ChatService {
-  constructor() {
-    this.client = new QdrantClient({
-      url: process.env.QDRANT_URL,
-      apiKey: process.env.QDRANT_API_KEY,
-    });
-    this.usersCollectionName = "chat_users";
-    this.historyCollectionName = "chat_history";
-  }
+const qdrantManager = new QdrantManager();
+const CHAT_USERS_COLLECTION = 'chat_users';
+const CHAT_HISTORY_COLLECTION = 'chat_history';
 
-  async ensureCollections() {
-    await this.ensureCollection(this.usersCollectionName, 768);
-    await this.ensureCollection(this.historyCollectionName, 768, "userId");
-  }
+const saveUser = async ({ fullName, email }) => {
+  const userId = generateId();
+  const user = { id: userId, payload: { fullName, email } };
+  await qdrantManager.upsertPoint(CHAT_USERS_COLLECTION, [user]);
+  return user;
+};
 
-  async ensureCollection(collectionName, vectorSize, indexField = null) {
-    try {
-      await this.client.getCollection(collectionName);
-      console.log(`Collection '${collectionName}' already exists`);
-    } catch (error) {
-      if (error.status === 404) {
-        await this.client.createCollection(collectionName, {
-          vectors: {
-            size: vectorSize,
-            distance: "Cosine",
-          },
-        });
-        console.log(`Collection '${collectionName}' created successfully`);
-      }
-    }
+const saveChatHistory = async ({ userId, email,fullName,title, messages }) => {
+  const chatId = generateId();
+  const chatHistory = { id: chatId, payload: { userId, email,fullName, title, messages } };
+  await qdrantManager.upsertPoint(CHAT_HISTORY_COLLECTION, [chatHistory]);
+  return chatHistory;
+};
 
-    if (indexField) {
-      try {
-        await this.client.createPayloadIndex(collectionName, {
-          field_name: indexField,
-          field_schema: "keyword",
-        });
-        console.log(`Index for '${indexField}' ensured on '${collectionName}'`);
-      } catch (indexError) {
-        if (indexError.message?.includes("already exists")) {
-          console.log(`Index for '${indexField}' already exists`);
-        } else {
-          console.error(`Error ensuring index for ${indexField}:`, indexError);
-        }
-      }
-    }
-  }
+const getUsers = async () => {
+  return await qdrantManager.scrollPoints(CHAT_USERS_COLLECTION);
+};
 
-  async saveUser({ fullName, email }) {
-    await this.ensureCollections();
-    const userId = generateId();
-    const user = { id: userId, payload: { fullName, email } };
-    await this.client.upsert(this.usersCollectionName, { wait: true, points: [user] });
-    return user;
-  }
+const getChatHistories = async () => {
+  return await qdrantManager.scrollPoints(CHAT_HISTORY_COLLECTION);
+};
 
-  async saveChatHistory({ userId, title, messages }) {
-    await this.ensureCollections();
-    const chatId = generateId();
-    const chatHistory = { id: chatId, payload: { userId, title, messages } };
-    await this.client.upsert(this.historyCollectionName, { wait: true, points: [chatHistory] });
+const getChatHistoryByUserId = async (userId) => {
+  const allHistory = await qdrantManager.scrollPoints(CHAT_HISTORY_COLLECTION);
+  return allHistory.filter(chat => chat.userId === userId);
+};
+
+const getChatHistoryByUserIdAndChatId = async (userId, chatId) => {
+  const chatHistory = await qdrantManager.getPoint(CHAT_HISTORY_COLLECTION, chatId);
+  if (chatHistory && chatHistory.payload.userId === userId) {
     return chatHistory;
   }
 
