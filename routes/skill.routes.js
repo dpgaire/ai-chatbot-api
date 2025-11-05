@@ -137,7 +137,7 @@ const authorize = require('../middleware/role.middleware');
  *         description: Server error
  */
 router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), skillController.addSkill);
-router.get('/', skillController.getSkills);
+router.get('/',protectRoute, authorize(['superAdmin', 'Admin']), skillController.getSkills);
 router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), skillController.updateSkill);
 router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), skillController.deleteSkill);
 

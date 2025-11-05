@@ -49,20 +49,6 @@ const chat = async (req, res) => {
       success: true,
       query: query,
       response: response,
-      // context: {
-      //   documentsFound: similarDocs.length,
-      //   relevantDocs: similarDocs.map(doc => ({
-      //     id: doc.id,
-      //     relevanceScore: Math.round(doc.score * 100) / 100,
-      //     textPreview: doc.text.substring(0, 150) + (doc.text.length > 150 ? '...' : ''),
-      //     timestamp: doc.timestamp
-      //   }))
-      // },
-      // metadata: {
-      //   queryLength: query.length,
-      //   embeddingSize: queryEmbedding.length,
-      //   responseLength: response.length
-      // }
     });
 
   } catch (error) {

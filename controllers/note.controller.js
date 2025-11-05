@@ -2,7 +2,7 @@ const noteService = require('../services/note.service');
 
 const addNote = async (req, res) => {
   try {
-    const note = await noteService.addNote(req.body);
+    const note = await noteService.addNote(req.body, req.user.id);
     res.status(201).json(note);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -11,7 +11,7 @@ const addNote = async (req, res) => {
 
 const getNotes = async (req, res) => {
   try {
-    const notes = await noteService.getNotes();
+    const notes = await noteService.getNotes(req.user.id, req.user.role);
     res.status(200).json(notes);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -29,7 +29,7 @@ const getNoteById = async (req, res) => {
 
 const updateNote = async (req, res) => {
   try {
-    const note = await noteService.updateNote(req.params.id, req.body);
+    const note = await noteService.updateNote(req.params.id, req.body, req.user.id, req.user.role);
     res.status(200).json(note);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -38,7 +38,7 @@ const updateNote = async (req, res) => {
 
 const deleteNote = async (req, res) => {
   try {
-    await noteService.deleteNote(req.params.id);
+    await noteService.deleteNote(req.params.id, req.user.id, req.user.role);
     res.status(200).json({ message: 'Note deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

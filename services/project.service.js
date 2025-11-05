@@ -66,29 +66,34 @@ class ProjectService {
     return { success: true, id };
   }
 
-  async getProjects(userId, role) {
-    await this.ensureCollection();
+ async getProjects(userId, role) {
+  await this.ensureCollection();
 
-    let queryOptions = {
-      limit: 100,
-      with_payload: true,
+  let queryOptions = {
+    limit: 100,
+    with_payload: true,
+  };
+
+  if (role !== 'superAdmin' && role !== 'Admin') {
+    queryOptions.filter = {
+      must: [
+        {
+          key: "userId",
+          match: { value: userId },
+        },
+      ],
     };
-
-    if (role !== 'superAdmin' && role !== 'Admin') {
-      queryOptions.filter = {
-        must: [
-          {
-            key: "userId",
-            match: { value: userId },
-          },
-        ],
-      };
-    }
-
-    const response = await this.client.scroll(this.collectionName, queryOptions);
-
-    return response.points.map(point => ({ id: point.id, ...point.payload }));
   }
+
+  try {
+    const response = await this.client.scroll(this.collectionName, queryOptions);
+    return response.points.map(point => ({ id: point.id, ...point.payload }));
+  } catch (error) {
+    console.error(`Error fetching projects for user ${userId}:`, error);
+    throw new Error('Failed to fetch projects');
+  }
+}
+
 
   async updateProject(id, projectData, userId, role) {
     await this.ensureCollection();
