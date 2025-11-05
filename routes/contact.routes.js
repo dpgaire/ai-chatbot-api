@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const contactController = require('../controllers/contact.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -45,7 +46,7 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/', contactController.addContact);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), contactController.addContact);
 
 /**
  * @swagger
@@ -61,7 +62,7 @@ router.post('/', contactController.addContact);
  *       500:
  *         description: Server error
  */
-router.get('/', protectRoute, contactController.getContact);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), contactController.getContact);
 
 /**
  * @swagger
@@ -85,7 +86,7 @@ router.get('/', protectRoute, contactController.getContact);
  *       500:
  *         description: Server error
  */
-router.get('/:id', protectRoute, contactController.getContactById);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), contactController.getContactById);
 
 /**
  * @swagger
@@ -127,7 +128,7 @@ router.get('/:id', protectRoute, contactController.getContactById);
  *       500:
  *         description: Server error
  */
-router.put('/:id', protectRoute, contactController.updateContact);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), contactController.updateContact);
 
 /**
  * @swagger
@@ -151,6 +152,6 @@ router.put('/:id', protectRoute, contactController.updateContact);
  *       500:
  *         description: Server error
  */
-router.delete('/:id', protectRoute, contactController.deleteContact);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), contactController.deleteContact);
 
 module.exports = router;

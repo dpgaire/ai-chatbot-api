@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const queryController = require('../controllers/query.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -46,7 +47,7 @@ const protectRoute = require('../middleware/auth.middleware');
  *         description: Server error
  */
 
-router.get('/', protectRoute, queryController.getQueries);
-router.delete('/:id', protectRoute, queryController.deleteQuery);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), queryController.getQueries);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), queryController.deleteQuery);
 
 module.exports = router;

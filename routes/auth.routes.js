@@ -9,37 +9,46 @@ const authController = require('../controllers/auth.controller');
      *   description: User authentication
      */
 
-    // /**
-    //  * @swagger
-    //  * /api/auth/register:
-    //  *   post:
-    //  *     summary: Register a new user
-    //  *     tags: [Authentication]
-    //  *     requestBody:
-    //  *       required: true
-    //  *       content:
-    //  *         application/json:
-    //  *           schema:
-    //  *             type: object
-    //  *             required:
-    //  *               - email
-    //  *               - password
-    //  *             properties:
-    //  *               email:
-    //  *                 type: string
-    //  *                 format: email
-    //  *               password:
-    //  *                 type: string
-    //  *                 format: password
-    //  *     responses:
-    //  *       201:
-    //  *         description: User registered successfully
-    //  *       400:
-    //  *         description: Email and password are required
-    //  *       500:
-    //  *         description: Server error
-    //  */
-// router.post('/register', authController.register);
+    /**
+     * @swagger
+     * /api/auth/register:
+     *   post:
+     *     summary: Register a new user
+     *     tags: [Authentication]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - email
+     *               - password
+     *             properties:
+     *               email:
+     *                 type: string
+     *                 format: email
+     *               password:
+     *                 type: string
+     *                 format: password
+     *               fullName:
+     *                 type: string
+     *                 description: Full name of the user (optional)
+     *               role:
+     *                 type: string
+     *                 description: Role of the user (optional, defaults to 'user')
+     *                 enum:
+     *                   - user
+     *                   - admin
+     *     responses:
+     *       201:
+     *         description: User registered successfully
+     *       400:
+     *         description: Email and password are required
+     *       500:
+     *         description: Server error
+     */
+router.post('/register', authController.register);
 
 /**
  * @swagger

@@ -59,7 +59,7 @@ class AuthService {
     }
   }
 
-  async register(email, password) {
+  async register(email, password, role = 'user', fullName) {
     if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
       throw new Error("Invalid email or password");
     }
@@ -72,13 +72,13 @@ class AuthService {
     const point = {
       id: userId,
       vector: [0.1, 0.2, 0.3, 0.4],
-      payload: { email, password: hashedPassword },
+      payload: { email, password: hashedPassword, role, fullName },
     };
 
     const upsertResponse = await this.client.upsert(this.collectionName, { wait: true, points: [point] });
     console.log("Upsert response:", upsertResponse);
 
-    return { id: userId, email };
+    return { id: userId, email, role, fullName };
   }
 
   async login(email, password) {
@@ -109,6 +109,8 @@ class AuthService {
 
       const user = response.points[0].payload;
 
+      console.log('user',user)
+
       if (!user || !user.password) {
         console.log("User or password not found in payload:", user);
         return null;
@@ -124,6 +126,8 @@ class AuthService {
       return {
         id: response.points[0].id,
         email: user.email,
+        role: user.role,
+        fullName: user.fullName
       };
     } catch (error) {
       console.error("Error during login:", error.message, error.status, error.data);

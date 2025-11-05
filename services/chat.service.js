@@ -37,87 +37,129 @@ const getChatHistoryByUserIdAndChatId = async (userId, chatId) => {
   if (chatHistory && chatHistory.payload.userId === userId) {
     return chatHistory;
   }
-  return null;
-};
 
-const updateChatHistoryTitle = async (userId, chatId, title) => {
-  const chatHistory = await getChatHistoryByUserIdAndChatId(userId, chatId);
-  if (chatHistory) {
-    const newPayload = { ...chatHistory.payload, title: title };
-    await qdrantManager.updatePayload(CHAT_HISTORY_COLLECTION, chatId, newPayload);
-    return { id: chatId, payload: newPayload };
-  }
-  return null;
-};
-
-const patchChatHistory = async (userId, chatId, patchData = {}) => {
-  const chatHistory = await getChatHistoryByUserIdAndChatId(userId, chatId);
-  if (!chatHistory) return null;
-
-  // Custom merge logic for messages
-  let mergedMessages = chatHistory.payload.messages || [];
-
-  if (patchData.messages) {
-    mergedMessages = [...mergedMessages, ...patchData.messages];
+  async getUsers() {
+    await this.ensureCollections();
+    const response = await this.client.scroll(this.usersCollectionName, { with_payload: true });
+    return response.points.map(point => ({ id: point.id, ...point.payload }));
   }
 
-  const newPayload = {
-    ...chatHistory.payload,
-    ...patchData,
-    messages: mergedMessages, // ensure merged array is kept
-    updatedAt: new Date().toISOString(),
-  };
+  async getChatHistories(userId, role) {
+    await this.ensureCollections();
+    let queryOptions = {
+      with_payload: true,
+    };
 
-  await qdrantManager.updatePayload(CHAT_HISTORY_COLLECTION, chatId, newPayload);
-  return { id: chatId, payload: newPayload };
-};
-
-
-
-const deleteChatHistory = async (userId, chatId) => {
-  const chatHistory = await getChatHistoryByUserIdAndChatId(userId, chatId);
-  if (chatHistory) {
-    await qdrantManager.deletePoint(CHAT_HISTORY_COLLECTION, chatId);
-    return true;
-  }
-  return false;
-};
-
-const deleteUser = async (userId) => {
-   const pointId = normalizeId(userId);
-  try {
-    // Fetch user's chat history
-    const userChatHistories = await getChatHistoryByUserId(pointId);
-    
-    // Delete each chat from Qdrant
-    for (const chat of userChatHistories) {
-      try {
-        await qdrantManager.deletePoint(CHAT_HISTORY_COLLECTION, chat.id);
-      } catch (chatError) {
-        console.error(`Failed to delete chat with id ${chat.id}:`, chatError);
-      }
+    if (role !== 'superAdmin' && role !== 'Admin') {
+      queryOptions.filter = {
+        must: [
+          {
+            key: "userId",
+            match: { value: userId },
+          },
+        ],
+      };
     }
 
-    // Delete the user from Qdrant
-    await qdrantManager.deletePoint(CHAT_USERS_COLLECTION, pointId);
-
-    console.log(`User ${pointId} and their chats deleted successfully.`);
-    return true;
-  } catch (error) {
-    console.error(`Failed to delete user ${pointId}:`, error);
-    return false;
+    const response = await this.client.scroll(this.historyCollectionName, queryOptions);
+    return response.points.map(point => ({ id: point.id, ...point.payload }));
   }
-};
 
-module.exports = {
-  saveUser,
-  saveChatHistory,
-  getUsers,
-  getChatHistories,
-  getChatHistoryByUserId,
-  getChatHistoryByUserIdAndChatId,
-  updateChatHistoryTitle,
-  patchChatHistory,
-  deleteChatHistory,
-  deleteUser,
-};
+  async getChatHistoryByUserIdAndChatId(userId, chatId) {
+    await this.ensureCollections();
+    const chatHistory = await this.client.retrieve(this.historyCollectionName, { ids: [chatId], with_payload: true });
+    if (chatHistory.length > 0 && chatHistory[0].payload.userId === userId) {
+      return { id: chatHistory[0].id, ...chatHistory[0].payload };
+    }
+    return null;
+  }
+
+  async updateChatHistory(id, chatData, userId, role) {
+    await this.ensureCollections();
+    const pointId = normalizeId(id);
+
+    const existingPoint = await this.client.retrieve(this.historyCollectionName, {
+      ids: [pointId],
+      with_payload: true,
+    });
+
+    if (existingPoint.length === 0) {
+      throw new Error(`Point with id ${id} not found`);
+    }
+
+    const existingPayload = existingPoint[0].payload;
+
+    if (role !== 'superAdmin' && role !== 'Admin' && String(existingPayload.userId) !== String(userId)) {
+      throw new Error("Forbidden: You do not own this record");
+    }
+
+    const updatedPayload = {
+      ...existingPayload,
+      ...chatData,
+    };
+
+    const point = {
+      id: pointId,
+      payload: updatedPayload,
+    };
+
+    await this.client.upsert(this.historyCollectionName, {
+      wait: true,
+      points: [point],
+    });
+
+    return { success: true, id: pointId };
+  }
+
+  async deleteChatHistory(id, userId, role) {
+    await this.ensureCollections();
+    const pointId = normalizeId(id);
+
+    const existingPoint = await this.client.retrieve(this.historyCollectionName, {
+      ids: [pointId],
+      with_payload: true,
+    });
+
+    if (existingPoint.length === 0) {
+      throw new Error(`Point with id ${id} not found`);
+    }
+
+    const existingPayload = existingPoint[0].payload;
+
+    if (role !== 'superAdmin' && role !== 'Admin' && String(existingPayload.userId) !== String(userId)) {
+      throw new Error("Forbidden: You do not own this record");
+    }
+
+    await this.client.delete(this.historyCollectionName, {
+      points: [pointId],
+    });
+
+    return { success: true };
+  }
+
+  async deleteUser(userId) {
+    await this.ensureCollections();
+    const pointId = normalizeId(userId);
+    try {
+      const userChatHistories = await this.getChatHistories(pointId, 'superAdmin');
+      
+      for (const chat of userChatHistories) {
+        try {
+          await this.client.delete(this.historyCollectionName, { points: [chat.id] });
+        } catch (chatError) {
+          console.error(`Failed to delete chat with id ${chat.id}:`, chatError);
+        }
+      }
+
+      await this.client.delete(this.usersCollectionName, { points: [pointId] });
+
+      console.log(`User ${pointId} and their chats deleted successfully.`);
+      return true;
+    } catch (error) {
+      console.error(`Failed to delete user ${pointId}:`, error);
+      return false;
+    }
+  }
+}
+
+module.exports = new ChatService();

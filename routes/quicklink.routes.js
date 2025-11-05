@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const quickLinkController = require('../controllers/quicklink.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -110,10 +111,10 @@ const protectRoute = require('../middleware/auth.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, quickLinkController.addQuickLink);
-router.get('/', protectRoute, quickLinkController.getQuickLinks);
-router.get('/:id', protectRoute, quickLinkController.getQuickLinkById);
-router.put('/:id', protectRoute, quickLinkController.updateQuickLink);
-router.delete('/:id', protectRoute, quickLinkController.deleteQuickLink);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), quickLinkController.addQuickLink);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), quickLinkController.getQuickLinks);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), quickLinkController.getQuickLinkById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), quickLinkController.updateQuickLink);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), quickLinkController.deleteQuickLink);
 
 module.exports = router;

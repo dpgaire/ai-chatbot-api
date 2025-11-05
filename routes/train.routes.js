@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const trainController = require('../controllers/train.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -49,7 +50,7 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/', protectRoute, trainController.train);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), trainController.train);
 
 /**
  * @swagger
@@ -71,7 +72,7 @@ router.post('/', protectRoute, trainController.train);
  *       500:
  *         description: Server error
  */
-router.get('/', protectRoute, trainController.getAllTrainData);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), trainController.getAllTrainData);
 
 /**
  * @swagger
@@ -112,7 +113,7 @@ router.get('/', protectRoute, trainController.getAllTrainData);
  *       500:
  *         description: Server error
  */
-router.put('/:id', protectRoute, trainController.updateTrainData);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), trainController.updateTrainData);
 
 /**
  * @swagger
@@ -136,6 +137,6 @@ router.put('/:id', protectRoute, trainController.updateTrainData);
  *       500:
  *         description: Server error
  */
-router.delete('/:id', protectRoute, trainController.deleteTrainData);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), trainController.deleteTrainData);
 
 module.exports = router;

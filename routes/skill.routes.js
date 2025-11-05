@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const skillController = require('../controllers/skill.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -135,10 +136,9 @@ const protectRoute = require('../middleware/auth.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/', protectRoute, skillController.addSkill);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), skillController.addSkill);
 router.get('/', skillController.getSkills);
-router.put('/:id', protectRoute, skillController.updateSkill);
-router.delete('/:id', protectRoute, skillController.deleteSkill);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), skillController.updateSkill);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), skillController.deleteSkill);
 
 module.exports = router;
-

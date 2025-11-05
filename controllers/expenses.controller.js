@@ -2,7 +2,7 @@ const expensesService = require('../services/expenses.service');
 
 const addExpense = async (req, res) => {
   try {
-    const expense = await expensesService.addExpense(req.body);
+    const expense = await expensesService.addExpense(req.body, req.user.id);
     res.status(201).json(expense);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -11,7 +11,7 @@ const addExpense = async (req, res) => {
 
 const getExpenses = async (req, res) => {
   try {
-    const expenses = await expensesService.getExpenses();
+    const expenses = await expensesService.getExpenses(req.user.id, req.user.role);
     res.status(200).json(expenses);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -29,7 +29,7 @@ const getExpenseById = async (req, res) => {
 
 const updateExpense = async (req, res) => {
   try {
-    const expense = await expensesService.updateExpense(req.params.id, req.body);
+    const expense = await expensesService.updateExpense(req.params.id, req.body, req.user.id, req.user.role);
     res.status(200).json(expense);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -38,7 +38,7 @@ const updateExpense = async (req, res) => {
 
 const deleteExpense = async (req, res) => {
   try {
-    await expensesService.deleteExpense(req.params.id);
+    await expensesService.deleteExpense(req.params.id, req.user.id, req.user.role);
     res.status(200).json({ message: 'Expense deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

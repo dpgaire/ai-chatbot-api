@@ -30,9 +30,22 @@ class GoalsService {
         throw error;
       }
     }
+    try {
+      await this.client.createPayloadIndex(this.collectionName, {
+        field_name: "userId",
+        field_schema: "integer",
+      });
+      console.log(`Index for 'userId' ensured on '${this.collectionName}'`);
+    } catch (indexError) {
+      if (indexError.message?.includes("already exists")) {
+        console.log(`Index for 'userId' already exists`);
+      } else {
+        console.error("Error ensuring index for userId:", indexError);
+      }
+    }
   }
 
-  async addGoal(goalData) {
+  async addGoal(goalData, userId) {
     await this.ensureCollection();
 
     const embedding = await this.geminiManager.generateEmbedding(goalData.title);
@@ -41,7 +54,7 @@ class GoalsService {
     const point = {
       id: id,
       vector: embedding,
-      payload: { ...goalData, keyResults: [] },
+      payload: { ...goalData, keyResults: [], userId },
     };
 
     await this.client.upsert(this.collectionName, {
@@ -52,13 +65,26 @@ class GoalsService {
     return { success: true, id };
   }
 
-  async getGoals() {
+  async getGoals(userId, role) {
     await this.ensureCollection();
 
-    const response = await this.client.scroll(this.collectionName, {
-      limit: 100, // Adjust the limit as needed
+    let queryOptions = {
+      limit: 100,
       with_payload: true,
-    });
+    };
+
+    if (role !== 'superAdmin' && role !== 'Admin') {
+      queryOptions.filter = {
+        must: [
+          {
+            key: "userId",
+            match: { value: userId },
+          },
+        ],
+      };
+    }
+
+    const response = await this.client.scroll(this.collectionName, queryOptions);
 
     return response.points.map(point => ({ id: point.id, ...point.payload }));
   }
@@ -76,17 +102,37 @@ class GoalsService {
     return { id: response[0].id, ...response[0].payload };
   }
 
-  async updateGoal(id, goalData) {
+  async updateGoal(id, goalData, userId, role) {
     await this.ensureCollection();
     const pointId = normalizeId(id);
 
     try {
+      const existingPoint = await this.client.retrieve(this.collectionName, {
+        ids: [pointId],
+        with_payload: true,
+      });
+
+      if (existingPoint.length === 0) {
+        throw new Error(`Point with id ${id} not found`);
+      }
+
+      const existingPayload = existingPoint[0].payload;
+
+      if (role !== 'superAdmin' && role !== 'Admin' && String(existingPayload.userId) !== String(userId)) {
+        throw new Error("Forbidden: You do not own this record");
+      }
+
       const embedding = await this.geminiManager.generateEmbedding(goalData.title);
+
+      const updatedPayload = {
+        ...existingPayload,
+        ...goalData,
+      };
 
       const point = {
         id: pointId,
         vector: embedding,
-        payload: goalData,
+        payload: updatedPayload,
       };
 
       await this.client.upsert(this.collectionName, {
@@ -101,17 +147,21 @@ class GoalsService {
     }
   }
 
-  async deleteGoal(id) {
+  async deleteGoal(id, userId, role) {
     await this.ensureCollection();
     try {
       const pointId = normalizeId(id);
       const retrieveResponse = await this.client.retrieve(this.collectionName, {
         ids: [pointId],
-        with_payload: false,
+        with_payload: true,
       });
 
       if (retrieveResponse.length === 0) {
         throw new Error(`Point with id ${pointId} not found.`);
+      }
+
+      if (role !== 'superAdmin' && role !== 'Admin' && retrieveResponse[0].payload.userId !== userId) {
+        throw new Error('Forbidden');
       }
 
       await this.client.delete(this.collectionName, {
@@ -125,16 +175,16 @@ class GoalsService {
     }
   }
 
-  async createKeyResult(goalId, keyResultData) {
+  async createKeyResult(goalId, keyResultData, userId, role) {
     const goal = await this.getGoalById(goalId);
     const keyResults = Array.isArray(keyResultData) ? keyResultData : [keyResultData];
     const newKeyResults = keyResults.map(kr => ({ ...kr, id: generateId() }));
     goal.keyResults.push(...newKeyResults);
-    await this.updateGoal(goalId, goal);
+    await this.updateGoal(goalId, { keyResults: goal.keyResults }, userId, role);
     return newKeyResults;
   }
 
-  async updateKeyResult(goalId, krId, keyResultData) {
+  async updateKeyResult(goalId, krId, keyResultData, userId, role) {
     const goal = await this.getGoalById(goalId);
     const normalizedKrId = normalizeId(krId);
     const keyResultIndex = goal.keyResults.findIndex(kr => kr.id === normalizedKrId);
@@ -148,15 +198,15 @@ class GoalsService {
     }
 
     goal.keyResults[keyResultIndex] = { ...goal.keyResults[keyResultIndex], ...dataToUpdate };
-    await this.updateGoal(goalId, goal);
+    await this.updateGoal(goalId, { keyResults: goal.keyResults }, userId, role);
     return goal.keyResults[keyResultIndex];
   }
 
-  async deleteKeyResult(goalId, krId) {
+  async deleteKeyResult(goalId, krId, userId, role) {
     const goal = await this.getGoalById(goalId);
     const normalizedKrId = normalizeId(krId);
     goal.keyResults = goal.keyResults.filter(kr => kr.id !== normalizedKrId);
-    await this.updateGoal(goalId, goal);
+    await this.updateGoal(goalId, { keyResults: goal.keyResults }, userId, role);
     return { success: true };
   }
 }
