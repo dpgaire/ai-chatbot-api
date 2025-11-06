@@ -92,7 +92,7 @@ router.get('/', protectRoute, authorize(['superAdmin']), userController.getUsers
  *       500:
  *         description: Server error
  */
-router.get('/:id', protectRoute, authorize(['superAdmin']), userController.getUserById);
+router.get('/:id', protectRoute, authorize(['superAdmin','Admin','User']), userController.getUserById);
 
 /**
  * @swagger

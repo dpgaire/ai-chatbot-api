@@ -122,9 +122,6 @@ class UserService {
   }
 
   async getUserById(id, userId, role) {
-    if (role !== "superAdmin" && id !== userId)
-      throw new Error("Forbidden");
-
     const pointId = normalizeId(id);
     const [point] = await this.client.retrieve(this.collectionName, {
       ids: [pointId],
