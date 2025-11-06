@@ -46,6 +46,7 @@ const login = async (req, res) => {
     );
 
     res.json({
+      id: user.id,
       fullName: user.fullName,
       email: user.email,
       role: user.role,
@@ -90,6 +91,7 @@ const refreshToken = async (req, res) => {
     );
 
     res.json({
+      id: user.id,
       fullName: userDetails.fullName,
       email: userDetails.email,
       role: userDetails.role,
