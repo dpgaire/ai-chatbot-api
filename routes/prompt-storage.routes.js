@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const promptStorageController = require('../controllers/prompt-storage.controller');
 const protectRoute = require('../middleware/auth.middleware');
+const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
@@ -114,10 +115,10 @@ const protectRoute = require('../middleware/auth.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, promptStorageController.addPrompt);
-router.get('/', protectRoute, promptStorageController.getPrompts);
-router.get('/:id', protectRoute, promptStorageController.getPromptById);
-router.put('/:id', protectRoute, promptStorageController.updatePrompt);
-router.delete('/:id', protectRoute, promptStorageController.deletePrompt);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin','User']), promptStorageController.addPrompt);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin','User']), promptStorageController.getPrompts);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), promptStorageController.getPromptById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), promptStorageController.updatePrompt);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), promptStorageController.deletePrompt);
 
 module.exports = router;

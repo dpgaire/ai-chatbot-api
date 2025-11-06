@@ -117,11 +117,11 @@ const authorize = require('../middleware/role.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.addGoal);
-router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.getGoals);
-router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.getGoalById);
-router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.updateGoal);
-router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), goalsController.deleteGoal);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin','User']), goalsController.addGoal);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin','User']), goalsController.getGoals);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), goalsController.getGoalById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), goalsController.updateGoal);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), goalsController.deleteGoal);
 
 // Key Results
 

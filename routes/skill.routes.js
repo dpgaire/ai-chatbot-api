@@ -3,6 +3,7 @@ const router = express.Router();
 const skillController = require('../controllers/skill.controller');
 const protectRoute = require('../middleware/auth.middleware');
 const authorize = require('../middleware/role.middleware');
+const apiKeyAuth = require('../middleware/apiKey.middleware');
 
 /**
  * @swagger
@@ -136,9 +137,31 @@ const authorize = require('../middleware/role.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), skillController.addSkill);
-router.get('/',protectRoute, authorize(['superAdmin', 'Admin']), skillController.getSkills);
-router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), skillController.updateSkill);
-router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), skillController.deleteSkill);
+/**
+ * @swagger
+ * /api/skills/public:
+ *   get:
+ *     summary: Get skill information (Public via API Key)
+ *     tags: [Skills]
+ *     parameters:
+ *       - in: header
+ *         name: x-api-key
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Skill information (for public API)
+ *       401:
+ *         description: Invalid or missing API key
+ *       500:
+ *         description: Server error
+ */
+
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin','User']), skillController.addSkill);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin','User']), skillController.getSkills);
+router.get('/public', apiKeyAuth, skillController.getSkills);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), skillController.updateSkill);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), skillController.deleteSkill);
 
 module.exports = router;

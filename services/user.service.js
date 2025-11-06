@@ -1,5 +1,6 @@
 const { QdrantClient } = require("@qdrant/js-client-rest");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const { generateId, normalizeId } = require("../utils/generateId");
 
 class UserService {
@@ -12,51 +13,67 @@ class UserService {
   }
 
   async ensureCollection() {
+    let collectionExists = true;
     try {
-      const collectionInfo = await this.client.getCollection(
-        this.collectionName
-      );
-      console.log(`Collection '${this.collectionName}' already exists`);
-    } catch (error) {
-      if (error.status === 404) {
-        console.log(`Creating collection '${this.collectionName}'`);
-        await this.client.createCollection(this.collectionName, {
-          vectors: {
-            size: 4,
-            distance: "Cosine",
-          },
-        });
-        console.log(`Collection '${this.collectionName}' created successfully`);
+      await this.client.getCollection(this.collectionName);
+    } catch (err) {
+      if (err.status === 404) collectionExists = false;
+      else throw err;
+    }
 
-        console.log(`Creating index on 'email' field`);
-        await this.client.createPayloadIndex(this.collectionName, {
-          field_name: "email",
-          field_schema: "keyword",
-          wait: true,
-        });
-        console.log(`Index on 'email' field created successfully`);
-      } else {
-        console.error(
-          "Error checking/creating collection:",
-          error.message,
-          error.status,
-          error.data
-        );
-        throw error;
+    if (!collectionExists) {
+      await this.client.createCollection(this.collectionName, {
+        vectors: { size: 4, distance: "Cosine" },
+      });
+
+      await this.client.createPayloadIndex(this.collectionName, {
+        field_name: "email",
+        field_schema: "keyword",
+        wait: true,
+      });
+    }
+    await this._ensurePayloadIndex("apiKey");
+    await this._ensurePayloadIndex("email"); 
+  }
+
+  async _ensurePayloadIndex(field) {
+    try {
+      await this.client.createPayloadIndex(this.collectionName, {
+        field_name: field,
+        field_schema: "keyword",
+        wait: true,
+      });
+      console.log(`Payload index created for "${field}"`);
+    } catch (err) {
+      if (err.status !== 400) {
+        console.error(`Failed to create index for "${field}":`, err);
+        throw err;
       }
     }
   }
 
-  async createUser(email, password, role) {
+  generateApiKey() {
+    return crypto.randomBytes(32).toString("hex");
+  }
+
+  async createUser(fullName, image, email, password, role) {
     await this.ensureCollection();
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = generateId();
+    const apiKey = this.generateApiKey();
 
     const point = {
       id: userId,
       vector: [0.1, 0.2, 0.3, 0.4],
-      payload: { email, password: hashedPassword, role },
+      payload: {
+        fullName,
+        image,
+        email,
+        password: hashedPassword,
+        role,
+        apiKey,
+      },
     };
 
     await this.client.upsert(this.collectionName, {
@@ -64,55 +81,70 @@ class UserService {
       points: [point],
     });
 
-    return { id: userId, email, role };
+    return { id: userId, email, role, apiKey };
   }
 
-  async getUsers(userId, role) {
-    console.log("role", role);
-    if (role !== "superAdmin") {
-      throw new Error(
-        "Forbidden: You do not have permission to access this resource"
-      );
-    }
+  async findUserByApiKey(apiKey) {
+    if (!apiKey) throw new Error("API key is required");
     const response = await this.client.scroll(this.collectionName, {
-      limit: 100,
+      filter: {
+        must: [
+          {
+            key: "apiKey",
+            match: { value: apiKey }, 
+          },
+        ],
+      },
+      limit: 1,
       with_payload: true,
     });
-    return response.points.map((point) => ({ id: point.id, ...point.payload }));
+
+    if (!response.points?.length) {
+      console.warn("No user found for API key:", apiKey);
+      return null;
+    }
+
+    const user = response.points[0];
+    const { password, ...safePayload } = user.payload;
+    return { id: user.id, ...safePayload };
+  }
+
+
+  async getUsers(_userId, role) {
+    if (role !== "superAdmin")
+      throw new Error("Forbidden: only superAdmin can list users");
+
+    const { points } = await this.client.scroll(this.collectionName, {
+      limit: 200,
+      with_payload: true,
+    });
+    return points.map((p) => ({ id: p.id, ...p.payload }));
   }
 
   async getUserById(id, userId, role) {
-    if (role !== "superAdmin" && id !== userId) {
-      throw new Error(
-        "Forbidden: You do not have permission to access this resource"
-      );
-    }
-    const pointId = normalizeId(id);
+    if (role !== "superAdmin" && id !== userId)
+      throw new Error("Forbidden");
 
-    const response = await this.client.retrieve(this.collectionName, {
+    const pointId = normalizeId(id);
+    const [point] = await this.client.retrieve(this.collectionName, {
       ids: [pointId],
       with_payload: true,
     });
-    if (response.length === 0) {
-      return null;
-    }
-    return { id: response[0].id, ...response[0].payload };
+
+    return point ? { id: point.id, ...point.payload } : null;
   }
 
   async updateUser(id, updates, userId, role) {
-    if (role !== "superAdmin" && id !== userId) {
-      throw new Error(
-        "Forbidden: You do not have permission to modify this resource"
-      );
-    }
+    if (role !== "superAdmin" && id !== userId)
+      throw new Error("Forbidden");
+
     const pointId = normalizeId(id);
-    const { email, password, role: newRole } = updates;
     const payload = {};
-    if (email) payload.email = email;
-    if (newRole) payload.role = newRole;
-    if (password) {
-      payload.password = await bcrypt.hash(password, 10);
-    }
+
+    if (updates.email) payload.email = updates.email;
+    if (updates.role) payload.role = updates.role;
+    if (updates.password)
+      payload.password = await bcrypt.hash(updates.password, 10);
 
     await this.client.setPayload(this.collectionName, {
       payload,
@@ -123,43 +155,58 @@ class UserService {
     return { id, ...updates };
   }
 
-  async deleteUser(id, userId, role) {
-    await this.ensureCollection(); // make sure collection + indices exist
+  async updateProfile(id, updates, userId) {
+    if (String(id) !== String(userId))
+      throw new Error("Forbidden");
 
     const pointId = normalizeId(id);
+    const payload = {};
 
-    try {
-      const retrieveResponse = await this.client.retrieve(this.collectionName, {
-        ids: [pointId],
-        with_payload: true,
-      });
+    if (updates.fullName) payload.fullName = updates.fullName;
+    if (updates.image) payload.image = updates.image;
+    if (updates.password)
+      payload.password = await bcrypt.hash(updates.password, 10);
+    if (updates.regenerateApiKey) payload.apiKey = this.generateApiKey();
 
-      if (!retrieveResponse || retrieveResponse.length === 0) {
-        throw new Error(`Point with id ${pointId} not found.`);
-      }
+    await this.client.setPayload(this.collectionName, {
+      payload,
+      points: [pointId],
+      wait: true,
+    });
 
-      const payload = retrieveResponse[0].payload || {};
+    const { password, ...rest } = payload;
+    return { id, ...rest };
+  }
 
-      // normalize types to avoid number/string mismatch
-      if (
-        role !== "superAdmin" &&
-        String(payload.userId) !== String(userId)
-      ) {
-        throw new Error("Forbidden");
-      }
+  async deleteUser(id, userId, role) {
+    await this.ensureCollection();
 
-      // Use the client's delete method (not deletePoints) — matches other places in your code
-      await this.client.delete(this.collectionName, {
-        points: [pointId],
-        wait: true,
-      });
+    const pointId = normalizeId(id);
+    const [point] = await this.client.retrieve(this.collectionName, {
+      ids: [pointId],
+      with_payload: true,
+    });
 
-      return { success: true, message: "User deleted successfully" };
-    } catch (error) {
-      console.error("Error deleting point in Qdrant:", error);
-      throw error;
-    }
+    if (!point) throw new Error(`User ${pointId} not found`);
+
+    if (role !== "superAdmin" && String(point.payload.userId) !== String(userId))
+      throw new Error("Forbidden");
+
+    await this.client.delete(this.collectionName, {
+      points: [pointId],
+      wait: true,
+    });
+
+    return { success: true, message: "User deleted" };
   }
 }
 
-module.exports = new UserService();
+/* Export a **singleton** – call ensureCollection() once at app start */
+const userService = new UserService();
+
+/* Initialise indexes **once** when the module is required */
+userService.ensureCollection().catch((err) => {
+  console.error("Failed to initialise Qdrant collection/indexes:", err);
+});
+
+module.exports = userService;

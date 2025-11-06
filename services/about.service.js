@@ -35,6 +35,11 @@ class AboutService {
         field_name: "userId",
         field_schema: "integer",
       });
+      await this.client.createPayloadIndex(this.collectionName, {
+        field_name: "apiKey",
+        field_schema: "keyword",
+        wait: true,
+      });
       console.log(`Index for 'userId' ensured on '${this.collectionName}'`);
     } catch (indexError) {
       if (indexError.message?.includes("already exists")) {
@@ -68,6 +73,8 @@ class AboutService {
   }
 
   async getAbout(userId, role) {
+    console.log("userId", userId);
+    console.log("role", role);
     await this.ensureCollection();
 
     let queryOptions = {
@@ -75,7 +82,7 @@ class AboutService {
       with_payload: true,
     };
 
-    if (role !== 'superAdmin' && role !== 'Admin') {
+    if (role !== "superAdmin" && role !== "Admin") {
       queryOptions.filter = {
         must: [
           {
@@ -86,7 +93,10 @@ class AboutService {
       };
     }
 
-    const response = await this.client.scroll(this.collectionName, queryOptions);
+    const response = await this.client.scroll(
+      this.collectionName,
+      queryOptions
+    );
 
     return response.points.map((point) => ({ id: point.id, ...point.payload }));
   }
@@ -107,7 +117,11 @@ class AboutService {
 
       const existingPayload = existingPoint[0].payload;
 
-      if (role !== 'superAdmin' && role !== 'Admin' && String(existingPayload.userId) !== String(userId)) {
+      if (
+        role !== "superAdmin" &&
+        role !== "Admin" &&
+        String(existingPayload.userId) !== String(userId)
+      ) {
         throw new Error("Forbidden: You do not own this record");
       }
 
@@ -152,8 +166,12 @@ class AboutService {
         throw new Error(`Point with id ${id} not found`);
       }
 
-      if (role !== 'superAdmin' && role !== 'Admin' && existingPoints[0].payload.userId !== userId) {
-        throw new Error('Forbidden');
+      if (
+        role !== "superAdmin" &&
+        role !== "Admin" &&
+        existingPoints[0].payload.userId !== userId
+      ) {
+        throw new Error("Forbidden");
       }
 
       await this.client.delete(this.collectionName, {

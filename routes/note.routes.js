@@ -111,10 +111,10 @@ const authorize = require('../middleware/role.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), noteController.addNote);
-router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), noteController.getNotes);
-router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), noteController.getNoteById);
-router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), noteController.updateNote);
-router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), noteController.deleteNote);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin','User']), noteController.addNote);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin','User']), noteController.getNotes);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), noteController.getNoteById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), noteController.updateNote);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), noteController.deleteNote);
 
 module.exports = router;

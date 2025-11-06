@@ -133,10 +133,10 @@ const authorize = require('../middleware/role.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), libraryController.addLibrary);
-router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), libraryController.getLibraries);
-router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), libraryController.getLibraryById);
-router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), libraryController.updateLibrary);
-router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), libraryController.deleteLibrary);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin','User']), libraryController.addLibrary);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin','User']), libraryController.getLibraries);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), libraryController.getLibraryById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), libraryController.updateLibrary);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), libraryController.deleteLibrary);
 
 module.exports = router;
