@@ -111,10 +111,10 @@ const authorize = require('../middleware/role.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), taskController.addTask);
-router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), taskController.getTasks);
-router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), taskController.getTaskById);
-router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), taskController.updateTask);
-router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), taskController.deleteTask);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin','User']), taskController.addTask);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin','User']), taskController.getTasks);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), taskController.getTaskById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), taskController.updateTask);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), taskController.deleteTask);
 
 module.exports = router;

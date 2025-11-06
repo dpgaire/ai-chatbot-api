@@ -209,6 +209,27 @@ const apiKeyAuth = require('../middleware/apiKey.middleware');
 
 /**
  * @swagger
+ * /api/projects/public:
+ *   get:
+ *     summary: Get project information (Public via API Key)
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: header
+ *         name: x-api-key
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Project information (for public API)
+ *       401:
+ *         description: Invalid or missing API key
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
  * /api/projects/{id}/view:
  *   put:
  *     summary: Increment view count for a project
@@ -225,11 +246,13 @@ const apiKeyAuth = require('../middleware/apiKey.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), projectController.addProject);
-router.get('/', apiKeyAuth, projectController.getProjects);
+
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin','User']), projectController.addProject);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), projectController.getProjects);
+router.get('/public', apiKeyAuth, projectController.getProjects);
 router.get('/:id', projectController.getProjectById);
-router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), projectController.updateProject);
-router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), projectController.deleteProject);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), projectController.updateProject);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), projectController.deleteProject);
 router.put('/:id/view', projectController.incrementViewCount);
 
 module.exports = router;

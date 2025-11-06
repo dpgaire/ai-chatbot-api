@@ -189,6 +189,26 @@ const apiKeyAuth = require('../middleware/apiKey.middleware');
  *       500:
  *         description: Server error
  */
+/**
+ * @swagger
+ * /api/blogs/public:
+ *   get:
+ *     summary: Get blog information (Public via API Key)
+ *     tags: [Blogs]
+ *     parameters:
+ *       - in: header
+ *         name: x-api-key
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Blog information (for public API)
+ *       401:
+ *         description: Invalid or missing API key
+ *       500:
+ *         description: Server error
+ */
 
 /**
  * @swagger
@@ -209,7 +229,8 @@ const apiKeyAuth = require('../middleware/apiKey.middleware');
  *         description: Server error
  */
 router.post('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.addBlog);
-router.get('/', apiKeyAuth, blogController.getBlogs);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.getBlogs);
+router.get('/public', apiKeyAuth, blogController.getBlogs);
 router.get('/:id', blogController.getBlogById);
 router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.updateBlog);
 router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin', 'User']), blogController.deleteBlog);

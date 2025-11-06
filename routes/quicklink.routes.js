@@ -111,10 +111,10 @@ const authorize = require('../middleware/role.middleware');
  *         description: Server error
  */
 
-router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), quickLinkController.addQuickLink);
-router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), quickLinkController.getQuickLinks);
-router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin']), quickLinkController.getQuickLinkById);
-router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), quickLinkController.updateQuickLink);
-router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), quickLinkController.deleteQuickLink);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin','User']), quickLinkController.addQuickLink);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin','User']), quickLinkController.getQuickLinks);
+router.get('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), quickLinkController.getQuickLinkById);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), quickLinkController.updateQuickLink);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), quickLinkController.deleteQuickLink);
 
 module.exports = router;

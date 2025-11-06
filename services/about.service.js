@@ -73,6 +73,8 @@ class AboutService {
   }
 
   async getAbout(userId, role) {
+    console.log("userId", userId);
+    console.log("role", role);
     await this.ensureCollection();
 
     let queryOptions = {

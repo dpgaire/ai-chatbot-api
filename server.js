@@ -60,6 +60,7 @@ app.use('/api/prompt-storage', promptStorageRoutes);
 const swaggerUiOptions = {
   swaggerOptions: {
     persistAuthorization: true,
+    filter: true,
   },
   customCssUrl: 'https://unpkg.com/swagger-ui-dist@5.17.0/swagger-ui.css',
   customJs: [

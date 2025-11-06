@@ -3,7 +3,7 @@ const userService = require('../services/user.service');
 const apiKeyAuth = async (req, res, next) => {
   const apiKey = req.headers['x-api-key'];
 
-  console.log('apikey',apiKey)
+  console.log('apiKey',apiKey)
 
   if (!apiKey) {
     return res.status(401).json({ message: 'API key is required' });

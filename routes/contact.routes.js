@@ -3,6 +3,8 @@ const router = express.Router();
 const contactController = require('../controllers/contact.controller');
 const protectRoute = require('../middleware/auth.middleware');
 const authorize = require('../middleware/role.middleware');
+const apiKeyAuth = require('../middleware/apiKey.middleware');
+
 
 /**
  * @swagger
@@ -13,10 +15,16 @@ const authorize = require('../middleware/role.middleware');
 
 /**
  * @swagger
- * /api/contact:
+ * /api/contact/public:
  *   post:
  *     summary: Add a new contact message
  *     tags: [Contact]
+ *     parameters:
+ *       - in: header
+ *         name: x-api-key
+ *         required: true
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -43,10 +51,12 @@ const authorize = require('../middleware/role.middleware');
  *     responses:
  *       201:
  *         description: Contact message added successfully
+ *       401:
+ *         description: Missing or invalid API key
  *       500:
  *         description: Server error
  */
-router.post('/', protectRoute, authorize(['superAdmin', 'Admin', 'User']), contactController.addContact);
+router.post('/public', apiKeyAuth, contactController.addContact);
 
 /**
  * @swagger

@@ -10,9 +10,10 @@ const addAbout = async (req, res) => {
 };
 
 const getAbout = async (req, res) => {
-  console.log('req',req)
+  console.log('req',req.user)
   try {
     const about = await aboutService.getAbout(req.user.id, req.user.role);
+    console.log('about',about)
     res.status(200).json(about);
   } catch (error) {
     res.status(500).json({ message: error.message });
