@@ -50,7 +50,7 @@ const authorize = require('../middleware/role.middleware');
  *       500:
  *         description: Server error
  */
-router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), trainController.train);
+router.post('/', protectRoute, authorize(['superAdmin', 'Admin','User']), trainController.train);
 
 /**
  * @swagger
@@ -72,7 +72,7 @@ router.post('/', protectRoute, authorize(['superAdmin', 'Admin']), trainControll
  *       500:
  *         description: Server error
  */
-router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), trainController.getAllTrainData);
+router.get('/', protectRoute, authorize(['superAdmin', 'Admin','User']), trainController.getAllTrainData);
 
 /**
  * @swagger
@@ -113,7 +113,7 @@ router.get('/', protectRoute, authorize(['superAdmin', 'Admin']), trainControlle
  *       500:
  *         description: Server error
  */
-router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), trainController.updateTrainData);
+router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), trainController.updateTrainData);
 
 /**
  * @swagger
@@ -137,6 +137,6 @@ router.put('/:id', protectRoute, authorize(['superAdmin', 'Admin']), trainContro
  *       500:
  *         description: Server error
  */
-router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin']), trainController.deleteTrainData);
+router.delete('/:id', protectRoute, authorize(['superAdmin', 'Admin','User']), trainController.deleteTrainData);
 
 module.exports = router;
