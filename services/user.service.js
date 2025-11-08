@@ -127,8 +127,8 @@ class UserService {
       ids: [pointId],
       with_payload: true,
     });
-
-    return point ? { id: point.id, ...point.payload } : null;
+ const { password, ...safePayload } = point.payload;
+    return point ? { id: safePayload.id, ...safePayload } : null;
   }
 
   async updateUser(id, updates, userId, role) {
