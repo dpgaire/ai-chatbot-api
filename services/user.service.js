@@ -33,7 +33,7 @@ class UserService {
       });
     }
     await this._ensurePayloadIndex("apiKey");
-    await this._ensurePayloadIndex("email"); 
+    await this._ensurePayloadIndex("email");
   }
 
   async _ensurePayloadIndex(field) {
@@ -43,7 +43,6 @@ class UserService {
         field_schema: "keyword",
         wait: true,
       });
-      console.log(`Payload index created for "${field}"`);
     } catch (err) {
       if (err.status !== 400) {
         console.error(`Failed to create index for "${field}":`, err);
@@ -91,7 +90,7 @@ class UserService {
         must: [
           {
             key: "apiKey",
-            match: { value: apiKey }, 
+            match: { value: apiKey },
           },
         ],
       },
@@ -108,7 +107,6 @@ class UserService {
     const { password, ...safePayload } = user.payload;
     return { id: user.id, ...safePayload };
   }
-
 
   async getUsers(_userId, role) {
     if (role !== "superAdmin")
@@ -127,13 +125,13 @@ class UserService {
       ids: [pointId],
       with_payload: true,
     });
- const { password, ...safePayload } = point.payload;
-    return point ? { id: safePayload.id, ...safePayload } : null;
+    const { password, ...safePayload } = point.payload;
+
+    return point ? { id: point.id, ...safePayload } : null;
   }
 
   async updateUser(id, updates, userId, role) {
-    if (role !== "superAdmin" && id !== userId)
-      throw new Error("Forbidden");
+    if (role !== "superAdmin" && id !== userId) throw new Error("Forbidden");
 
     const pointId = normalizeId(id);
     const payload = {};
@@ -153,14 +151,14 @@ class UserService {
   }
 
   async updateProfile(id, updates, userId) {
-    if (String(id) !== String(userId))
-      throw new Error("Forbidden");
+    if (String(id) !== String(userId)) throw new Error("Forbidden");
 
     const pointId = normalizeId(id);
     const payload = {};
 
     if (updates.fullName) payload.fullName = updates.fullName;
     if (updates.image) payload.image = updates.image;
+    if (updates.email) payload.email = updates.email;
     if (updates.password)
       payload.password = await bcrypt.hash(updates.password, 10);
     if (updates.regenerateApiKey) payload.apiKey = this.generateApiKey();
@@ -186,7 +184,10 @@ class UserService {
 
     if (!point) throw new Error(`User ${pointId} not found`);
 
-    if (role !== "superAdmin" && String(point.payload.userId) !== String(userId))
+    if (
+      role !== "superAdmin" &&
+      String(point.payload.userId) !== String(userId)
+    )
       throw new Error("Forbidden");
 
     await this.client.delete(this.collectionName, {
