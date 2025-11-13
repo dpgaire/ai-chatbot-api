@@ -49,7 +49,7 @@ class AuthService {
     }
   }
 
-  async register(email, password, role = 'user', fullName) {
+  async register(email, password, role = 'User', fullName) {
     if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
       throw new Error("Invalid email or password");
     }

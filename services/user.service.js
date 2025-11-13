@@ -173,6 +173,19 @@ class UserService {
     return { id, ...rest };
   }
 
+  async updateUserStripeCustomerId(userId, stripeCustomerId) {
+    const pointId = normalizeId(userId);
+    const payload = { stripeCustomerId };
+
+    await this.client.setPayload(this.collectionName, {
+      payload,
+      points: [pointId],
+      wait: true,
+    });
+
+    return { success: true };
+  }
+
   async deleteUser(id, userId, role) {
     await this.ensureCollection();
 

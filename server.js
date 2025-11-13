@@ -23,6 +23,8 @@ const libraryRoutes = require('./routes/library.routes');
 const userRoutes = require('./routes/user.routes');
 const runScriptRoutes = require('./routes/runscript.routes');
 const promptStorageRoutes = require('./routes/prompt-storage.routes');
+const stripeRoutes = require('./routes/stripe.routes');
+const paymentRoutes = require('./routes/payment.routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
@@ -55,6 +57,8 @@ app.use('/api/library', libraryRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/runscripts', runScriptRoutes);
 app.use('/api/prompt-storage', promptStorageRoutes);
+app.use('/api/stripe', stripeRoutes);
+app.use('/api/payments', paymentRoutes);
 
 
 const swaggerUiOptions = {

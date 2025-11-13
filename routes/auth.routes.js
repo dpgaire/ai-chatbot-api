@@ -34,12 +34,6 @@ const authController = require('../controllers/auth.controller');
      *               fullName:
      *                 type: string
      *                 description: Full name of the user (optional)
-     *               role:
-     *                 type: string
-     *                 description: Role of the user (optional, defaults to 'user')
-     *                 enum:
-     *                   - user
-     *                   - admin
      *     responses:
      *       201:
      *         description: User registered successfully
