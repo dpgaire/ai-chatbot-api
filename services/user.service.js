@@ -34,6 +34,33 @@ class UserService {
     }
     await this._ensurePayloadIndex("apiKey");
     await this._ensurePayloadIndex("email");
+    await this._ensurePayloadIndex("paymentType");
+
+    // Update existing users to include paymentType if missing
+    let offset = undefined;
+    while (true) {
+      const { points, next_page_offset } = await this.client.scroll(this.collectionName, {
+        limit: 100, // Process in batches
+        with_payload: true,
+        offset: offset,
+      });
+
+      if (points.length === 0) break;
+
+      for (const point of points) {
+        if (point.payload && point.payload.paymentType === undefined) {
+          console.log(`Updating user ${point.id} with default paymentType: "free"`);
+          await this.client.setPayload(this.collectionName, {
+            payload: { paymentType: "free" },
+            points: [point.id],
+            wait: true,
+          });
+        }
+      }
+
+      if (next_page_offset === undefined) break;
+      offset = next_page_offset;
+    }
   }
 
   async _ensurePayloadIndex(field) {
@@ -72,6 +99,7 @@ class UserService {
         password: hashedPassword,
         role,
         apiKey,
+        paymentType: "free",
       },
     };
 
@@ -103,7 +131,8 @@ class UserService {
       return null;
     }
 
-    const user = response.points[0];
+    let user = response.points[0];
+
     const { password, ...safePayload } = user.payload;
     return { id: user.id, ...safePayload };
   }
@@ -119,15 +148,16 @@ class UserService {
     return points.map((p) => ({ id: p.id, ...p.payload }));
   }
 
-  async getUserById(id, userId, role) {
+  async getUserById(id) {
     const pointId = normalizeId(id);
     const [point] = await this.client.retrieve(this.collectionName, {
       ids: [pointId],
       with_payload: true,
     });
-    const { password, ...safePayload } = point.payload;
+    let user = point ? { id: point.id, ...point.payload } : null;
 
-    return point ? { id: point.id, ...safePayload } : null;
+    const { password, ...safePayload } = user;
+    return safePayload;
   }
 
   async updateUser(id, updates, userId, role) {
@@ -140,6 +170,7 @@ class UserService {
     if (updates.role) payload.role = updates.role;
     if (updates.password)
       payload.password = await bcrypt.hash(updates.password, 10);
+    if (updates.paymentType) payload.paymentType = updates.paymentType;
 
     await this.client.setPayload(this.collectionName, {
       payload,
@@ -151,6 +182,7 @@ class UserService {
   }
 
   async updateProfile(id, updates, userId) {
+    console.log('updates',updates)
     if (String(id) !== String(userId)) throw new Error("Forbidden");
 
     const pointId = normalizeId(id);
@@ -162,6 +194,7 @@ class UserService {
     if (updates.password)
       payload.password = await bcrypt.hash(updates.password, 10);
     if (updates.regenerateApiKey) payload.apiKey = this.generateApiKey();
+    if (updates.paymentType) payload.paymentType = updates.paymentType;
 
     await this.client.setPayload(this.collectionName, {
       payload,

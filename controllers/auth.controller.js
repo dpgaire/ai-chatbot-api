@@ -53,6 +53,7 @@ const login = async (req, res) => {
       image: user.image || "https://dpgaire.github.io/image-server/projects/fallback-user.png",
       accessToken,
       refreshToken,
+      paymentType: user.paymentType,
       apiKey: user.apiKey,
     });
   } catch (error) {
@@ -91,7 +92,7 @@ const refreshToken = async (req, res) => {
     );
 
     res.json({
-      id: user.id,
+      id: userDetails.id,
       fullName: userDetails.fullName,
       email: userDetails.email,
       role: userDetails.role,

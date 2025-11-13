@@ -4,7 +4,7 @@ class PaymentService {
   async getAllPayments() {
     try {
       const charges = await stripe.charges.list({
-        limit: 100, // Adjust as needed
+        limit: 100, 
       });
       return charges.data;
     } catch (error) {

@@ -62,12 +62,12 @@ class AuthService {
     const point = {
       id: userId,
       vector: [0.1, 0.2, 0.3, 0.4],
-      payload: { email, password: hashedPassword, role, fullName },
+      payload: { email, password: hashedPassword, role, fullName, paymentType: "free" },
     };
 
      await this.client.upsert(this.collectionName, { wait: true, points: [point] });
 
-    return { id: userId, email, role, fullName };
+    return { id: userId, email, role, fullName, paymentType: "free" };
   }
 
   async login(email, password) {
@@ -110,13 +110,16 @@ class AuthService {
         return null;
       }
 
+      console.log('user',user)
+
       return {
         id: response.points[0].id,
         email: user.email,
         role: user.role,
         fullName: user.fullName,
         image: user.image,
-        apiKey: user.apiKey
+        apiKey: user.apiKey,
+        paymentType: user.paymentType,
       };
     } catch (error) {
       console.error("Error during login:", error.message, error.status, error.data);

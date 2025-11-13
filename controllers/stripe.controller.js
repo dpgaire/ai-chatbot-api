@@ -3,7 +3,7 @@ const stripeService = require("../services/stripe.service");
 const createCheckoutSession = async (req, res) => {
   try {
     const { priceId } = req.body;
-    const userId = req.user.id; // Get user ID from the authenticated user
+    const userId = req.user.id; 
 
     if (!priceId) {
       return res.status(400).json({ message: "priceId is required" });
