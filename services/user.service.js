@@ -162,7 +162,7 @@ class UserService {
 
   async updateUser(id, updates, userId, role) {
     if (role !== "superAdmin" && id !== userId) throw new Error("Forbidden");
-
+    console.log('updates',updates)
     const pointId = normalizeId(id);
     const payload = {};
 

@@ -2,6 +2,16 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const userService = require("./user.service");
 
 class StripeService {
+  _getPaymentTypeFromPriceId(priceId) {
+    console.log(`Determining payment type for priceId: ${priceId}`);
+    if (priceId === process.env.STRIPE_PRICE_ID_TEAM) return "team";
+    if (priceId === process.env.STRIPE_PRICE_ID_PRO) return "pro";
+    
+    if (priceId) return "pro";
+
+    return "free";
+  }
+
   async createCheckoutSession(userId, priceId) {
     if (!priceId || typeof priceId !== "string" || !priceId.startsWith("price_")) {
       throw new Error("Invalid or malformed 'priceId'.");
@@ -37,6 +47,8 @@ class StripeService {
         await userService.updateUserStripeCustomerId(userId, stripeCustomerId);
       }
 
+      const paymentType = this._getPaymentTypeFromPriceId(priceId);
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [{ price: priceId, quantity: 1 }],
@@ -44,7 +56,7 @@ class StripeService {
         customer: stripeCustomerId,
         success_url: `${process.env.CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.CLIENT_URL}/payment-cancelled`,
-        metadata: { userId, priceId },
+        metadata: { userId, priceId, paymentType },
       });
 
       return { url: session.url };
@@ -63,18 +75,10 @@ class StripeService {
       throw new Error(`Webhook Error: ${err.message}`);
     }
 
-    const getPaymentTypeFromPriceId = (priceId) => {
-      console.log(`Determining payment type for priceId: ${priceId}`);
-      if (priceId === process.env.STRIPE_PRICE_ID_TEAM) return "team";
-      if (priceId === process.env.STRIPE_PRICE_ID_PRO) return "pro";
-      
-      if (priceId) return "pro";
-
-      return "free";
-    };
+    console.log(`Webhook event received: ${event.type}`);
 
     const updateUserPaymentType = async (userId, paymentType) => {
-      if (userId) {
+      if (userId && paymentType) {
         // Pass userId as the third argument to satisfy the permission check in updateUser
         await userService.updateUser(userId, { paymentType }, userId);
         console.log(`User ${userId} updated to paymentType: ${paymentType}`);
@@ -84,9 +88,8 @@ class StripeService {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object;
-        const { userId, priceId } = session.metadata;
-        const paymentType = getPaymentTypeFromPriceId(priceId);
-        console.log('paymentType',paymentType)
+        const { userId, paymentType } = session.metadata;
+        console.log('paymentType from metadata',paymentType)
         await updateUserPaymentType(userId, paymentType);
         break;
       }
@@ -96,16 +99,16 @@ class StripeService {
         const customer = await stripe.customers.retrieve(subscription.customer);
         const userId = customer.metadata.userId;
         const priceId = subscription.items.data[0].price.id;
-        const paymentType = getPaymentTypeFromPriceId(priceId);
+        const paymentType = this._getPaymentTypeFromPriceId(priceId);
         await updateUserPaymentType(userId, paymentType);
         break;
       }
-      case "customer.subscription.updated": {
+      case "customer.subscription.created": {
         const subscription = event.data.object;
         const customer = await stripe.customers.retrieve(subscription.customer);
         const userId = customer.metadata.userId;
         const priceId = subscription.items.data[0].price.id;
-        const paymentType = getPaymentTypeFromPriceId(priceId);
+        const paymentType = this._getPaymentTypeFromPriceId(priceId);
         await updateUserPaymentType(userId, paymentType);
         break;
       }
@@ -137,8 +140,7 @@ class StripeService {
 
       if (subscriptions.data.length > 0) {
         const priceId = subscriptions.data[0].items.data[0].price.id;
-        if (priceId === process.env.STRIPE_PRICE_ID_TEAM) return "team";
-        if (priceId === process.env.STRIPE_PRICE_ID_PRO) return "pro";
+        return this._getPaymentTypeFromPriceId(priceId);
       }
       return "free";
     } catch (error) {
