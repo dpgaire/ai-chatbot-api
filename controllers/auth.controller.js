@@ -3,14 +3,14 @@ const userService = require("../services/user.service");
 const jwt = require("jsonwebtoken");
 
 const register = async (req, res) => {
-  const { email, password, role, fullName } = req.body;
+  const { email, password, fullName } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
 
   try {
-    const user = await authService.register(email, password, role, fullName);
+    const user = await authService.register(email, password, 'User', fullName);
     res.status(201).json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -53,6 +53,7 @@ const login = async (req, res) => {
       image: user.image || "https://dpgaire.github.io/image-server/projects/fallback-user.png",
       accessToken,
       refreshToken,
+      paymentType: user.paymentType,
       apiKey: user.apiKey,
     });
   } catch (error) {
@@ -91,7 +92,7 @@ const refreshToken = async (req, res) => {
     );
 
     res.json({
-      id: user.id,
+      id: userDetails.id,
       fullName: userDetails.fullName,
       email: userDetails.email,
       role: userDetails.role,

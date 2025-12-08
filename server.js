@@ -23,6 +23,9 @@ const libraryRoutes = require('./routes/library.routes');
 const userRoutes = require('./routes/user.routes');
 const runScriptRoutes = require('./routes/runscript.routes');
 const promptStorageRoutes = require('./routes/prompt-storage.routes');
+const stripeRoutes = require('./routes/stripe.routes');
+const paymentRoutes = require('./routes/payment.routes');
+const stripeService = require('./services/stripe.service'); // Import stripeService
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
@@ -30,8 +33,21 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: ['https://admin-dashboard-coral-nu-61.vercel.app', 'https://www.durgagairhe.com.np','http://localhost:5173','https://ai-chatbot-api-ten.vercel.app']
+  origin: ['https://nexus-app-coral-nu-61.vercel.app/login', 'https://www.durgagairhe.com.np','http://localhost:5173','https://ai-chatbot-api-ten.vercel.app','http://192.168.0.8:5173']
 }));
+
+// Stripe webhook endpoint - MUST be before express.json()
+app.post('/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+
+  try {
+    await stripeService.handleWebhookEvent(req, sig);
+    res.json({ received: true });
+  } catch (error) {
+    console.error("Stripe webhook error:", error.message);
+    res.status(400).send(`Webhook Error: ${error.message}`);
+  }
+});
 
 app.use(express.json());
 
@@ -55,6 +71,8 @@ app.use('/api/library', libraryRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/runscripts', runScriptRoutes);
 app.use('/api/prompt-storage', promptStorageRoutes);
+app.use('/api/stripe', stripeRoutes);
+app.use('/api/payments', paymentRoutes);
 
 
 const swaggerUiOptions = {
