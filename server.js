@@ -33,7 +33,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: ['https://nexus-app-coral-nu-61.vercel.app/login', 'https://www.durgagairhe.com.np','http://localhost:5173','https://ai-chatbot-api-ten.vercel.app','http://192.168.0.8:5173']
+  origin: ['https://nexus-app-coral-nu-61.vercel.app', 'https://www.durgagairhe.com.np','http://localhost:5173','https://ai-chatbot-api-ten.vercel.app','http://192.168.0.8:5173']
 }));
 
 // Stripe webhook endpoint - MUST be before express.json()
