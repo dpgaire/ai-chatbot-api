@@ -3,7 +3,7 @@ const userService = require("./user.service");
 
 class StripeService {
   _getPaymentTypeFromPriceId(priceId) {
-    console.log(`Determining payment type for priceId: ${priceId}`);
+    console.log(`Determining payment type for priceIdddd: ${priceId}`);
     if (priceId === process.env.STRIPE_PRICE_ID_TEAM) return "team";
     if (priceId === process.env.STRIPE_PRICE_ID_PRO) return "pro";
     
@@ -37,17 +37,21 @@ class StripeService {
         }
       }
 
+      const paymentType = this._getPaymentTypeFromPriceId(priceId);
+
       if (!stripeCustomerId) {
         const customer = await stripe.customers.create({
           email: user.email,
           name: user.fullName,
-          metadata: { userId: user.id },
+          metadata: { userId: user.id, paymentType: paymentType},
         });
         stripeCustomerId = customer.id;
+        console.log('customer',customer)
         await userService.updateUserStripeCustomerId(userId, stripeCustomerId);
       }
 
-      const paymentType = this._getPaymentTypeFromPriceId(priceId);
+     
+      console.log('payment', paymentType)
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -89,6 +93,16 @@ class StripeService {
       case "checkout.session.completed": {
         const session = event.data.object;
         const { userId, paymentType } = session.metadata;
+        console.log('paymentType from metadata',paymentType)
+        await updateUserPaymentType(userId, paymentType);
+        break;
+      }
+      case "payment_method.attached": {
+        const session = event.data.object;
+        const paymentMethod = event.data.object;
+        const customer = await stripe.customers.retrieve(paymentMethod.customer);
+        const userId = customer.metadata.userId;
+        const paymentType = this._getPaymentTypeFromPriceId(session.metadata.priceId);
         console.log('paymentType from metadata',paymentType)
         await updateUserPaymentType(userId, paymentType);
         break;
