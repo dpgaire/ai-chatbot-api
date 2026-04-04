@@ -1,11 +1,13 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 class GeminiManager {
-  constructor() {
-    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    this.embeddingModel = this.genAI.getGenerativeModel({ model: 'text-embedding-004' });
-    this.chatModel = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  }
+constructor() {
+  this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  
+  this.embeddingModel = this.genAI.getGenerativeModel({ model: 'gemini-embedding-001' }); 
+
+  this.chatModel = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }); 
+}
 
   async generateEmbedding(text) {
     try {
@@ -19,7 +21,7 @@ class GeminiManager {
 
   async generateResponse(query, context = []) {
     try {
-          let prompt = `You are a helpful personal AI assistant with access to the user's relationship in collection. 
+      let prompt = `You are a helpful personal AI assistant with access to the user's relationship in collection. 
 Answer the user's question directly and naturally, without prefacing with phrases like 
 "Based on your provided data" or "Thank you for asking". 
 Do not add unnecessary disclaimers. 
@@ -39,7 +41,8 @@ User Question: ${query}`;
       }
 
       const result = await this.chatModel.generateContent(prompt);
-      return result.response.text();
+      // Directly return the response text
+      return result.response || result;
     } catch (error) {
       console.error('Error generating response:', error);
       throw new Error('Failed to generate response');

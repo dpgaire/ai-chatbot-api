@@ -18,6 +18,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@google-cloud/vertexai": "^1.10.4",
+    "@google/genai": "^1.48.0",
     "@google/generative-ai": "^0.24.1",
     "@qdrant/js-client-rest": "^1.15.1",
     "bcryptjs": "^3.0.2",
