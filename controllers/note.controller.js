@@ -5,7 +5,7 @@ const addNote = async (req, res) => {
     const note = await noteService.addNote(req.body, req.user.id);
     res.status(201).json(note);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 
@@ -14,7 +14,7 @@ const getNotes = async (req, res) => {
     const notes = await noteService.getNotes(req.user.id, req.user.role);
     res.status(200).json(notes);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 
@@ -23,7 +23,7 @@ const getNoteById = async (req, res) => {
     const note = await noteService.getNoteById(req.params.id);
     res.status(200).json(note);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 
@@ -32,7 +32,7 @@ const updateNote = async (req, res) => {
     const note = await noteService.updateNote(req.params.id, req.body, req.user.id, req.user.role);
     res.status(200).json(note);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 
@@ -41,7 +41,7 @@ const deleteNote = async (req, res) => {
     await noteService.deleteNote(req.params.id, req.user.id, req.user.role);
     res.status(200).json({ message: 'Note deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 

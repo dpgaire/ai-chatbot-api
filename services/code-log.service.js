@@ -20,7 +20,7 @@ class CodeLogService {
       if (error.status === 404) {
         await this.client.createCollection(this.collectionName, {
           vectors: {
-            size: 768, // Gemini embedding size
+            size: 3072, // Gemini embedding size
             distance: "Cosine",
           },
         });

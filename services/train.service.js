@@ -20,7 +20,7 @@ class TrainService {
       if (error.status === 404) {
         await this.client.createCollection(this.collectionName, {
           vectors: {
-            size: 768,
+            size: 3072,
             distance: 'Cosine',
           },
         });

@@ -21,7 +21,7 @@ class AboutService {
         console.log(`Creating collection '${this.collectionName}'`);
         await this.client.createCollection(this.collectionName, {
           vectors: {
-            size: 768, // Gemini embedding size
+            size: 3072, // Gemini embedding size
             distance: "Cosine",
           },
         });

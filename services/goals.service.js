@@ -21,7 +21,7 @@ class GoalsService {
         console.log(`Creating collection '${this.collectionName}'`);
         await this.client.createCollection(this.collectionName, {
           vectors: {
-            size: 768, // Gemini embedding size
+            size: 3072, // Gemini embedding size
             distance: 'Cosine',
           },
         });
@@ -118,7 +118,11 @@ class GoalsService {
 
       const existingPayload = existingPoint[0].payload;
 
-      if (role !== 'superAdmin' && role !== 'Admin' && String(existingPayload.userId) !== String(userId)) {
+      console.log('existingPayload.userId',existingPayload.userId)
+      console.log('String(userId)',String(userId))
+
+
+      if (String(existingPayload.userId) !== String(userId)) {
         throw new Error("Forbidden: You do not own this record");
       }
 
@@ -160,7 +164,7 @@ class GoalsService {
         throw new Error(`Point with id ${pointId} not found.`);
       }
 
-      if (role !== 'superAdmin' && role !== 'Admin' && retrieveResponse[0].payload.userId !== userId) {
+      if ( retrieveResponse[0].payload.userId !== userId) {
         throw new Error('Forbidden');
       }
 

@@ -11,7 +11,7 @@ class QdrantManager {
     this.userQueriesCollectionName = "user_queries";
   }
 
-  async ensureCollection(collectionName, vectorSize = 768) {
+  async ensureCollection(collectionName, vectorSize = 3072) {
     try {
       const collectionExists = await this.client
         .getCollection(collectionName)
